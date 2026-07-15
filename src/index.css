@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #151311;
+  overscroll-behavior-y: none;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-display {
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+}

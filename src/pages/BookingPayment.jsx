@@ -1,0 +1,123 @@
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { CreditCard, Smartphone, AlertCircle } from "lucide-react";
+import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
+import { TOURS } from "../data.js";
+import { useBooking } from "../context/BookingContext.jsx";
+
+export default function BookingPayment() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const tour = TOURS.find((t) => t.id === id);
+  const { participants, selectedTime, method, setMethod, customer, setLastConfirmedBooking } = useBooking();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const total = tour.price; // preço é por quadriciclo, não por pessoa
+  const sinal = Math.round(total * 0.3);
+
+  const handleConfirm = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      // Chama a função serverless (api/create-preference.js) que cria a
+      // preferência de pagamento no Mercado Pago e devolve o link de checkout.
+      const res = await fetch("/api/create-preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourId: tour.id,
+          tourName: tour.name,
+          amount: method === "pix" ? sinal : total,
+          description:
+            method === "pix"
+              ? `Sinal - ${tour.name} - ${customer.name}`
+              : `${tour.name} - ${customer.name}`,
+          payerName: customer.name,
+          payerPhone: customer.phone,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Falha ao criar preferência de pagamento");
+      const data = await res.json();
+
+      setLastConfirmedBooking({
+        tourId: tour.id,
+        tourName: tour.name,
+        time: selectedTime,
+        participants,
+        method,
+        total,
+        customer,
+      });
+
+      // Em produção, redireciona para o checkout do Mercado Pago:
+      // window.location.href = data.init_point;
+      navigate(`/passeio/${id}/confirmacao`);
+    } catch (e) {
+      setError(
+        "Ainda não foi possível conectar ao Mercado Pago. Configure a chave de acesso no arquivo .env (veja o README)."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-charcoal flex flex-col">
+      <TopBar title="PAGAMENTO" showBack />
+      <TrailProgress step={4} total={4} />
+      <div className="px-4">
+        <div className="rounded-xl p-4 bg-stone border border-hline">
+          <div className="font-display text-white text-[15px]">RESUMO DO PEDIDO</div>
+          <div className="flex justify-between mt-2">
+            <span className="text-xs text-muted">{tour.name}</span>
+            <span className="text-xs text-cream">{selectedTime} · {participants} pessoa(s)</span>
+          </div>
+          <div className="h-px my-3 bg-hline" />
+          <div className="flex justify-between">
+            <span className="text-xs text-muted">Total</span>
+            <span className="font-display text-orange text-lg">R$ {total}</span>
+          </div>
+        </div>
+
+        <div className="font-display text-muted text-sm tracking-wide mt-4">FORMA DE PAGAMENTO</div>
+        <div className="flex flex-col gap-2 mt-2">
+          {[
+            { key: "pix", label: "Pix", sub: `Sinal de R$ ${sinal} agora, restante no dia`, icon: Smartphone },
+            { key: "card", label: "Cartão de crédito", sub: `Pagamento integral de R$ ${total}`, icon: CreditCard },
+          ].map(({ key, label, sub, icon: Icon }) => {
+            const active = method === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setMethod(key)}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-left border ${
+                  active ? "bg-orange border-orange" : "bg-stone border-hline"
+                }`}
+              >
+                <Icon size={18} color={active ? "#151311" : "#F5F0E6"} />
+                <div>
+                  <div className={`font-display text-[15px] ${active ? "text-ink" : "text-white"}`}>{label}</div>
+                  <div className={`text-[10px] ${active ? "text-ink" : "text-muted"}`}>{sub}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-4 bg-stone border border-orange">
+            <AlertCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
+            <span className="text-[11px] text-cream leading-relaxed">{error}</span>
+          </div>
+        )}
+      </div>
+      <div className="px-4 pb-6 mt-auto pt-4">
+        <PrimaryButton onClick={handleConfirm} disabled={!method || loading}>
+          {loading ? "PROCESSANDO..." : "CONFIRMAR RESERVA"}
+        </PrimaryButton>
+      </div>
+    </div>
+  );
+}
