@@ -2,12 +2,12 @@ export const TOURS = [
   {
     id: "matinal",
     name: "PASSEIO MATINAL",
-    time: "08:00 – 11:00",
+    time: "09:00 – 12:00",
     duration: "3h",
     level: "Iniciante",
-    price: 350,
-    desc: "Trilhas na mata nativa com paradas para fotos e cachoeira. Ideal pra quem quer sentir a adrenalina com segurança.",
-    includes: ["Equipamento de segurança", "Combustível incluso", "Guia especializado", "Seguro contra acidentes"],
+    price: 350,00
+    desc: "Trilhas na mata nativa, circuito ferradura com paradas para fotos e cachoeira. Ideal pra quem quer sentir a adrenalina com segurança.",
+    includes: ["Equipamento de segurança", "Combustível incluso", "Guia especializado", ],
     weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa.",
   },
   {
@@ -16,7 +16,7 @@ export const TOURS = [
     time: "14:00 – 17:00",
     duration: "3h",
     level: "Iniciante",
-    price: 350,
+    price: 350,00
     desc: "Rota costeira com dunas e pôr do sol garantido. O passeio mais pedido pra quem viaja em grupo.",
     includes: ["Equipamento de segurança", "Combustível incluso", "Guia especializado", "Seguro contra acidentes"],
     weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa.",
@@ -32,15 +32,15 @@ export const DATES = [
 ];
 
 export const SLOTS = [
-  { time: "08:00", vagas: 4 },
-  { time: "09:30", vagas: 2 },
-  { time: "11:00", vagas: 0 },
+  { time: "09:00", vagas: 5 },
+  { time: "14:00", vagas: 5 },
+  { time: },
 ];
 
 export const CONTACT = {
-  name: "Jorge Galavot",
-  phone: "(27) 99992-7056",
-  whatsapp: "5527999927056",
+  name: "Sidnei Pereira",
+  phone: "(14) 99123-2345",
+  whatsapp: "5514991232345",
   instagram: "@galavotadventureoficial",
   city: "Guarapari - ES",
 };
