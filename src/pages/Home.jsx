@@ -56,8 +56,12 @@ export default function Home() {
               className="rounded-xl p-3 flex-shrink-0 bg-stone border border-hline cursor-pointer"
               style={{ width: 190 }}
             >
-              <div className="h-20 rounded-lg mb-2 flex items-center justify-center bg-ink">
-                <Mountain size={26} color="#F2600C" />
+              <div className="h-20 rounded-lg mb-2 flex items-center justify-center bg-ink overflow-hidden">
+                {t.image ? (
+                  <img src={t.image} alt={t.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Mountain size={26} color="#F2600C" />
+                )}
               </div>
               <div className="font-display text-white text-[15px]">{t.name}</div>
               <div className="flex items-center gap-1 mt-1">

@@ -20,8 +20,20 @@ export default function BookingConfirmation() {
     );
   }
 
-  const { tourName, time, participants } = lastConfirmedBooking;
+  const { tourName, time, participants, customer, total, method } = lastConfirmedBooking;
   const date = DATES[selectedDateIndex];
+
+  const whatsappMessage = encodeURIComponent(
+    `Olá! Acabei de reservar pelo site:\n\n` +
+      `Passeio: ${tourName}\n` +
+      `Data: ${date.sub}\n` +
+      `Horário: ${time}\n` +
+      `Pessoas: ${participants}\n` +
+      `Nome: ${customer?.name || "-"}\n` +
+      `WhatsApp: ${customer?.phone || "-"}\n` +
+      `Pagamento: ${method === "pix" ? "Pix (sinal)" : "Cartão (integral)"} — R$ ${total}\n\n` +
+      `Aguardo confirmação do ponto de encontro!`
+  );
 
   const handleClose = () => {
     resetBookingFlow();
@@ -58,14 +70,17 @@ export default function BookingConfirmation() {
         </div>
 
         <a
-          href={`https://wa.me/${CONTACT.whatsapp}`}
+          href={`https://wa.me/${CONTACT.whatsapp}?text=${whatsappMessage}`}
           target="_blank"
           rel="noreferrer"
           className="flex items-center justify-center gap-2 rounded-lg py-3 mt-4 bg-moss"
         >
           <Phone size={16} color="#fff" />
-          <span className="font-display text-white text-[15px]">FALAR COM {CONTACT.name.split(" ")[0].toUpperCase()} NO WHATSAPP</span>
+          <span className="font-display text-white text-[15px]">ENVIAR RESERVA PRO WHATSAPP</span>
         </a>
+        <p className="text-[10px] text-muted text-center mt-2 px-4">
+          Toque no botão acima para confirmar sua reserva com a equipe pelo WhatsApp.
+        </p>
       </div>
 
       <div className="px-4 pb-6 mt-auto w-full pt-6">

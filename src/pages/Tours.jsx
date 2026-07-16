@@ -12,8 +12,12 @@ export default function Tours() {
       <div className="px-4 py-4 flex flex-col gap-4">
         {TOURS.map((t) => (
           <div key={t.id} className="rounded-xl overflow-hidden bg-stone border border-hline">
-            <div className="h-28 flex items-center justify-center bg-ink">
-              <Mountain size={34} color="#F2600C" />
+            <div className="h-28 flex items-center justify-center bg-ink overflow-hidden">
+              {t.image ? (
+                <img src={t.image} alt={t.name} className="w-full h-full object-cover" />
+              ) : (
+                <Mountain size={34} color="#F2600C" />
+              )}
             </div>
             <div className="p-4">
               <div className="flex justify-between items-start">

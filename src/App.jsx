@@ -11,6 +11,8 @@ import BookingPayment from "./pages/BookingPayment.jsx";
 import BookingConfirmation from "./pages/BookingConfirmation.jsx";
 import Bookings from "./pages/Bookings.jsx";
 import Profile from "./pages/Profile.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 function Shell() {
   const location = useLocation();
@@ -29,6 +31,8 @@ function Shell() {
         <Route path="/passeio/:id/confirmacao" element={<BookingConfirmation />} />
         <Route path="/reservas" element={<Bookings />} />
         <Route path="/perfil" element={<Profile />} />
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/painel" element={<AdminDashboard />} />
       </Routes>
       {showNav && <BottomNav />}
     </div>

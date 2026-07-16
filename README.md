@@ -58,13 +58,59 @@ window.location.href = data.init_point;
 e remova a linha `navigate(...)` logo abaixo dela. Isso faz o cliente ser
 redirecionado de verdade para a tela de pagamento do Mercado Pago.
 
-### 6. Domínio próprio (opcional)
+### 6. Configurar o painel administrativo (/admin)
+
+O painel mostra a lista de reservas e deixa você marcar cada uma como
+confirmada, concluída ou cancelada.
+
+**a) Criar o banco de dados (Supabase, gratuito):**
+1. Crie uma conta em https://supabase.com
+2. Clique em "New Project" (escolha uma senha de banco qualquer, só pra você)
+3. Depois que o projeto for criado, vá em **SQL Editor** (menu lateral) e
+   rode este comando (cole e clique em "Run"):
+
+```sql
+create table bookings (
+  id uuid primary key default gen_random_uuid(),
+  tour_id text,
+  tour_name text,
+  booking_date text,
+  booking_time text,
+  participants int,
+  customer_name text,
+  customer_phone text,
+  payment_method text,
+  total numeric,
+  status text default 'confirmado',
+  created_at timestamptz default now()
+);
+```
+
+4. Vá em **Project Settings > API** e copie:
+   - **Project URL** → essa é a `SUPABASE_URL`
+   - **service_role key** (não é a "anon key"!) → essa é a `SUPABASE_SERVICE_ROLE_KEY`
+
+**b) Escolher a senha do painel:**
+- Invente uma senha forte → essa é a `ADMIN_PASSWORD`
+- Invente também uma segunda frase aleatória (pode ser qualquer texto
+  longo e difícil de adivinhar) → essa é a `ADMIN_SECRET`
+
+**c) Configurar tudo na Vercel:**
+No painel da Vercel, vá em **Project Settings > Environment Variables** e
+adicione as 4 variáveis: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+`ADMIN_PASSWORD`, `ADMIN_SECRET`. Depois clique em "Redeploy".
+
+**d) Acessar o painel:**
+Vá em `https://seu-site.vercel.app/admin`, digite a senha, e pronto — você
+verá todas as reservas feitas pelo site.
+
+### 7. Domínio próprio (opcional)
 Se quiser um domínio tipo `galavotadventure.com.br`:
 - Compre o domínio (Registro.br, ~R$40/ano)
 - Na Vercel, vá em **Project Settings > Domains** e siga as instruções para
   apontar o domínio comprado
 
-### 7. "Instalar" o app no celular
+### 8. "Instalar" o app no celular
 Depois de publicado, ao acessar o site pelo Chrome (Android) ou Safari (iPhone),
 vai aparecer a opção **"Adicionar à tela de início"**. O ícone com nosso logo
 fica salvo no celular do cliente, funcionando como um app de verdade.

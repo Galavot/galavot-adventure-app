@@ -41,6 +41,29 @@ export default function BookingPayment() {
       if (!res.ok) throw new Error("Falha ao criar preferência de pagamento");
       const data = await res.json();
 
+      // Salva a reserva no banco (pra aparecer no painel /admin).
+      // Se essa chamada falhar, não bloqueia o cliente — a reserva ainda
+      // chega pelo WhatsApp na tela de confirmação.
+      try {
+        await fetch("/api/create-booking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tourId: tour.id,
+            tourName: tour.name,
+            date: new Date().toISOString().slice(0, 10),
+            time: selectedTime,
+            participants,
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            method,
+            total,
+          }),
+        });
+      } catch (dbErr) {
+        // Silencioso de propósito — ver comentário acima.
+      }
+
       setLastConfirmedBooking({
         tourId: tour.id,
         tourName: tour.name,
