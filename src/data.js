@@ -2,7 +2,7 @@ export const TOURS = [
   {
     id: "matinal",
     name: "PASSEIO MATINAL",
-    time: "08:00 – 11:00",
+    time: "09:00 – 12:00",
     duration: "3h",
     level: "Iniciante",
     price: 350,
@@ -19,8 +19,8 @@ export const TOURS = [
   {
     id: "vespertino",
     name: "PASSEIO VESPERTINO",
-    time: "14:00 – 17:00",
-    duration: "3h",
+    time: "13:00 – 17:00",
+    duration: "4h",
     level: "Iniciante",
     price: 350,
     image: "/fotos/passeio-vespertino.jpg",
@@ -56,24 +56,30 @@ export const ROUTE_INFO = {
   notIncluded: ["Alimentação", "Bebidas", "Taxa de entrada na Cachoeira Morosini"],
 };
 
-export const DATES = [
-  { label: "HOJE", sub: "15 JUL", iso: "2026-07-15" },
-  { label: "QUI", sub: "16 JUL", iso: "2026-07-16" },
-  { label: "SEX", sub: "17 JUL", iso: "2026-07-17" },
-  { label: "SAB", sub: "18 JUL", iso: "2026-07-18" },
-  { label: "DOM", sub: "19 JUL", iso: "2026-07-19" },
-];
+// Gera os próximos dias automaticamente a partir de hoje — assim a data
+// "HOJE" sempre está correta, sem precisar editar isso manualmente.
+const WEEKDAYS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
+const MONTHS = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
 
-export const SLOTS = [
-  { time: "08:00", vagas: 4 },
-  { time: "09:30", vagas: 2 },
-  { time: "11:00", vagas: 0 },
-];
+export function getUpcomingDates(days = 6) {
+  const result = [];
+  const today = new Date();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const label = i === 0 ? "HOJE" : i === 1 ? "AMANHÃ" : WEEKDAYS[d.getDay()];
+    const sub = `${String(d.getDate()).padStart(2, "0")} ${MONTHS[d.getMonth()]}`;
+    const iso = d.toISOString().slice(0, 10);
+    result.push({ label, sub, iso });
+  }
+  return result;
+}
 
 export const CONTACT = {
   name: "Jorge Galavot",
   phone: "(27) 99992-7056",
   whatsapp: "5527999927056",
   instagram: "@galavotadventureoficial",
+  instagramUrl: "https://www.instagram.com/galavotadventureoficial?igsh=ZXl3cTY2bzJhOG5j",
   city: "Guarapari - ES",
 };

@@ -30,7 +30,7 @@ export default function TourDetail() {
         <div className="flex gap-2 mt-3">
           <div className="flex-1 rounded-lg px-3 py-2 bg-stone border border-hline flex flex-col items-center">
             <Clock size={14} color="#F2600C" />
-            <span className="text-[11px] text-cream mt-1">{ROUTE_INFO.duration}</span>
+            <span className="text-[11px] text-cream mt-1">{tour.duration}</span>
           </div>
           <div className="flex-1 rounded-lg px-3 py-2 bg-stone border border-hline flex flex-col items-center">
             <MapPin size={14} color="#F2600C" />

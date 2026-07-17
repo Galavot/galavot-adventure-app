@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState } from "react";
+import { getUpcomingDates } from "../data.js";
 
 const BookingContext = createContext(null);
 
 export function BookingProvider({ children }) {
+  const [dates] = useState(() => getUpcomingDates());
   const [participants, setParticipants] = useState(2);
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [selectedTime, setSelectedTime] = useState(null);
@@ -19,6 +21,7 @@ export function BookingProvider({ children }) {
   };
 
   const value = {
+    dates,
     participants,
     setParticipants,
     selectedDateIndex,

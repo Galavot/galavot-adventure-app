@@ -2,12 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, MapPin, Phone } from "lucide-react";
 import { TopBar, PrimaryButton } from "../components/UI.jsx";
-import { CONTACT, DATES } from "../data.js";
+import { CONTACT } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
 
 export default function BookingConfirmation() {
   const navigate = useNavigate();
-  const { lastConfirmedBooking, selectedDateIndex, resetBookingFlow } = useBooking();
+  const { lastConfirmedBooking, dates, selectedDateIndex, resetBookingFlow } = useBooking();
 
   if (!lastConfirmedBooking) {
     return (
@@ -21,7 +21,7 @@ export default function BookingConfirmation() {
   }
 
   const { tourName, time, participants, customer, total, method } = lastConfirmedBooking;
-  const date = DATES[selectedDateIndex];
+  const date = dates[selectedDateIndex];
 
   const whatsappMessage = encodeURIComponent(
     `Olá! Acabei de reservar pelo site:\n\n` +

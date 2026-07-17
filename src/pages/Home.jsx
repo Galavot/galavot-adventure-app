@@ -1,18 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Mountain, ShieldCheck, Camera, Clock } from "lucide-react";
+import { Users, Mountain, ShieldCheck, Camera, Clock, Instagram, Share2 } from "lucide-react";
 import { Logo, PrimaryButton } from "../components/UI.jsx";
-import { TOURS } from "../data.js";
+import { TOURS, CONTACT } from "../data.js";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: "Galavot Adventure",
+      text: "Reserve seu passeio de quadriciclo em Guarapari pelo app da Galavot Adventure!",
+      url: window.location.origin,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // usuário cancelou o compartilhamento — não faz nada
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        // clipboard indisponível — ignora silenciosamente
+      }
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal">
-      <div className="px-5 pt-6 pb-8 relative overflow-hidden bg-gradient-to-br from-ink via-ink to-stone">
+      <div
+        className="px-5 pt-6 pb-8 relative overflow-hidden bg-cover bg-center"
+        style={{ backgroundImage: "url('/fotos/header-bg.jpg')" }}
+      >
         <div
-          className="absolute top-0 right-[-40px] opacity-90"
-          style={{ width: 140, height: 260, background: "#F2600C", transform: "rotate(18deg)" }}
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(160deg, rgba(21,19,17,0.92) 35%, rgba(44,40,35,0.75) 100%)" }}
         />
         <div className="relative">
           <Logo size={64} />
@@ -28,6 +55,24 @@ export default function Home() {
           </div>
           <div className="mt-5">
             <PrimaryButton onClick={() => navigate("/passeios")}>RESERVAR PASSEIO</PrimaryButton>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <a
+              href="https://www.instagram.com/galavotadventureoficial?igsh=ZXl3cTY2bzJhOG5j"
+              target="_blank"
+              rel="noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 bg-stone border border-hline"
+            >
+              <Instagram size={14} color="#F2600C" />
+              <span className="text-[11px] font-semibold text-cream">Instagram</span>
+            </a>
+            <button
+              onClick={handleShare}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 bg-stone border border-hline"
+            >
+              <Share2 size={14} color="#F2600C" />
+              <span className="text-[11px] font-semibold text-cream">{copied ? "Link copiado!" : "Compartilhar app"}</span>
+            </button>
           </div>
         </div>
       </div>

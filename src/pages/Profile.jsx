@@ -25,7 +25,7 @@ export default function Profile() {
             </span>
           </a>
           <a
-            href={`https://instagram.com/${CONTACT.instagram.replace("@", "")}`}
+            href={CONTACT.instagramUrl}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-3 rounded-lg px-4 py-3 bg-stone border border-hline"
