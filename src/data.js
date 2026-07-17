@@ -6,11 +6,14 @@ export const TOURS = [
     duration: "3h",
     level: "Iniciante",
     price: 350,
-    // Para colocar uma foto real, envie o arquivo pra pasta /public/fotos
-    // e coloque o caminho aqui, ex: "/fotos/passeio-matinal.jpg"
-    image: null,
-    desc: "Trilhas na mata nativa com paradas para fotos e cachoeira. Ideal pra quem quer sentir a adrenalina com segurança.",
-    includes: ["Equipamento de segurança", "Combustível incluso", "Guia especializado", "Seguro contra acidentes"],
+    image: "/fotos/passeio-matinal.jpg",
+    desc: "Trilhas off-road em meio à Mata Atlântica, com barro, subidas e descidas cheias de adrenalina. Passamos pelo Distrito de Buenos Aires, paramos em mirantes com vista pra Pedra do Elefante e terminamos com banho de cachoeira na Morosini.",
+    includes: [
+      "Quadriciclo com guia experiente durante todo o percurso",
+      "Combustível e suporte mecânico inclusos",
+      "Equipamentos de segurança (capacete e afins)",
+      "Fotos registradas durante o passeio",
+    ],
     weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa.",
   },
   {
@@ -20,12 +23,38 @@ export const TOURS = [
     duration: "3h",
     level: "Iniciante",
     price: 350,
-    image: null,
-    desc: "Rota costeira com dunas e pôr do sol garantido. O passeio mais pedido pra quem viaja em grupo.",
-    includes: ["Equipamento de segurança", "Combustível incluso", "Guia especializado", "Seguro contra acidentes"],
+    image: "/fotos/passeio-vespertino.jpg",
+    desc: "O mesmo roteiro de aventura, natureza e cachoeira — só que com a luz da tarde caindo sobre o litoral de Guarapari. Ideal pra quem viaja em casal ou em grupo e quer fechar o dia com uma vista incrível do mar.",
+    includes: [
+      "Quadriciclo com guia experiente durante todo o percurso",
+      "Combustível e suporte mecânico inclusos",
+      "Equipamentos de segurança (capacete e afins)",
+      "Fotos registradas durante o passeio",
+    ],
     weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa.",
   },
 ];
+
+// Detalhamento do roteiro (Rota 04 — Buenos Aires & Cachoeira Morosini),
+// usado na tela de detalhes do passeio.
+export const ROUTE_STOPS = [
+  { title: "Café Figueira", desc: "Recepção, orientações de segurança, entrega dos capacetes e teste dos quadriciclos." },
+  { title: "Saída para a Serra", desc: "Início do passeio em direção ao distrito de Buenos Aires, alternando asfalto e estradas rurais." },
+  { title: "Trilhas Off-Road", desc: "Trechos com barro, pedras, subidas, descidas e muita adrenalina em meio à Mata Atlântica." },
+  { title: "Mirantes Naturais", desc: "Paradas para fotos panorâmicas das montanhas e da região da Pedra do Elefante." },
+  { title: "Distrito de Buenos Aires", desc: "Passagem pela comunidade rural, observando a cultura e o cenário típico das montanhas capixabas." },
+  { title: "Cachoeira Morosini", desc: "Banho de cachoeira, descanso, contemplação da natureza e tempo livre para fotos." },
+  { title: "Estrutura Local", desc: "Possibilidade de consumo de bebidas e petiscos (pagamento à parte) e utilização da estrutura." },
+  { title: "Retorno", desc: "Volta pelas trilhas até o ponto inicial, encerrando a aventura." },
+];
+
+export const ROUTE_INFO = {
+  duration: "4 horas",
+  distance: "15 km",
+  level: "4 de 5",
+  included: ["Quadriciclo", "Capacete", "Guia", "Suporte mecânico durante o passeio", "Fotos (registradas durante o passeio)"],
+  notIncluded: ["Alimentação", "Bebidas", "Taxa de entrada na Cachoeira Morosini"],
+};
 
 export const DATES = [
   { label: "HOJE", sub: "15 JUL", iso: "2026-07-15" },
