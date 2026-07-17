@@ -9,7 +9,7 @@ export default function BookingPayment() {
   const { id } = useParams();
   const navigate = useNavigate();
   const tour = TOURS.find((t) => t.id === id);
-  const { participants, selectedTime, method, setMethod, customer, setLastConfirmedBooking } = useBooking();
+  const { dates, selectedDateIndex, participants, selectedTime, method, setMethod, customer, setLastConfirmedBooking } = useBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -51,7 +51,7 @@ export default function BookingPayment() {
           body: JSON.stringify({
             tourId: tour.id,
             tourName: tour.name,
-            date: new Date().toISOString().slice(0, 10),
+            date: dates[selectedDateIndex].iso,
             time: selectedTime,
             participants,
             customerName: customer.name,

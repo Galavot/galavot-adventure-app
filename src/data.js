@@ -6,6 +6,7 @@ export const TOURS = [
     duration: "3h",
     level: "Iniciante",
     price: 350,
+    maxQuadriciclos: 5,
     image: "/fotos/passeio-matinal.jpg",
     desc: "Trilhas off-road em meio à Mata Atlântica, com barro, subidas e descidas cheias de adrenalina. Passamos pelo Distrito de Buenos Aires, paramos em mirantes com vista pra Pedra do Elefante e terminamos com banho de cachoeira na Morosini.",
     includes: [
@@ -23,6 +24,7 @@ export const TOURS = [
     duration: "4h",
     level: "Iniciante",
     price: 350,
+    maxQuadriciclos: 5,
     image: "/fotos/passeio-vespertino.jpg",
     desc: "O mesmo roteiro de aventura, natureza e cachoeira — só que com a luz da tarde caindo sobre o litoral de Guarapari. Ideal pra quem viaja em casal ou em grupo e quer fechar o dia com uma vista incrível do mar.",
     includes: [

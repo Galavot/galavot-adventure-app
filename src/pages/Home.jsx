@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Mountain, ShieldCheck, Camera, Clock, Instagram, Share2 } from "lucide-react";
+import { Users, Mountain, ShieldCheck, Camera, Clock, Instagram, Share2, X } from "lucide-react";
 import { Logo, PrimaryButton } from "../components/UI.jsx";
 import { TOURS, CONTACT } from "../data.js";
 
 export default function Home() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [showRouteMap, setShowRouteMap] = useState(false);
 
   const handleShare = async () => {
     const shareData = {
@@ -30,6 +31,13 @@ export default function Home() {
       }
     }
   };
+
+  const benefitCards = [
+    { icon: Users, label: "Aventura para Todos" },
+    { icon: Mountain, label: "Cenários Incríveis", onClick: () => setShowRouteMap(true) },
+    { icon: ShieldCheck, label: "Diversão Garantida" },
+    { icon: Camera, label: "Momentos Inesquecíveis" },
+  ];
 
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal">
@@ -78,13 +86,14 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 px-5 mt-5">
-        {[
-          { icon: Users, label: "Aventura para Todos" },
-          { icon: Mountain, label: "Cenários Incríveis" },
-          { icon: ShieldCheck, label: "Diversão Garantida" },
-          { icon: Camera, label: "Momentos Inesquecíveis" },
-        ].map(({ icon: Icon, label }, i) => (
-          <div key={i} className="rounded-xl p-3 flex flex-col items-center text-center gap-2 bg-stone border border-hline">
+        {benefitCards.map(({ icon: Icon, label, onClick }, i) => (
+          <div
+            key={i}
+            onClick={onClick}
+            className={`rounded-xl p-3 flex flex-col items-center text-center gap-2 bg-stone border border-hline ${
+              onClick ? "cursor-pointer active:opacity-80" : ""
+            }`}
+          >
             <Icon size={20} color="#F2600C" />
             <span className="text-[11px] font-semibold text-cream">{label}</span>
           </div>
@@ -121,6 +130,27 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {showRouteMap && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setShowRouteMap(false)}
+        >
+          <button
+            onClick={() => setShowRouteMap(false)}
+            className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
+            aria-label="Fechar"
+          >
+            <X size={18} color="#fff" />
+          </button>
+          <img
+            src="/fotos/mapa-roteiro.jpg"
+            alt="Roteiro do passeio"
+            className="max-h-full max-w-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock } from "lucide-react";
+import { Clock, AlertCircle } from "lucide-react";
 import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import { TOURS } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -10,12 +10,44 @@ export default function BookingDateTime() {
   const navigate = useNavigate();
   const tour = TOURS.find((t) => t.id === id);
   const { dates, selectedDateIndex, setSelectedDateIndex, setSelectedTime } = useBooking();
+  const [availability, setAvailability] = useState(null); // { booked, max, available }
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (tour) setSelectedTime(tour.time);
   }, [tour, setSelectedTime]);
 
+  const checkAvailability = useCallback(
+    async (dateIso) => {
+      if (!tour) return;
+      setChecking(true);
+      setAvailability(null);
+      try {
+        const res = await fetch(
+          `/api/check-availability?tourId=${tour.id}&date=${dateIso}&max=${tour.maxQuadriciclos}`
+        );
+        const data = await res.json();
+        setAvailability(data);
+      } catch (err) {
+        // Se a checagem falhar, não bloqueia o cliente — assume disponível
+        setAvailability({ booked: 0, max: tour.maxQuadriciclos, available: tour.maxQuadriciclos });
+      } finally {
+        setChecking(false);
+      }
+    },
+    [tour]
+  );
+
+  useEffect(() => {
+    if (tour && dates[selectedDateIndex]) {
+      checkAvailability(dates[selectedDateIndex].iso);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDateIndex, tour]);
+
   if (!tour) return <div className="p-6 text-white">Passeio não encontrado.</div>;
+
+  const esgotado = availability && availability.available <= 0;
 
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal flex flex-col">
@@ -48,9 +80,35 @@ export default function BookingDateTime() {
             );
           })}
         </div>
+
+        <div className="mt-4 rounded-lg px-4 py-3 bg-stone border border-hline flex items-center justify-between">
+          {checking ? (
+            <span className="text-[12px] text-muted">Verificando vagas...</span>
+          ) : availability ? (
+            <>
+              <span className="text-[12px] text-cream">
+                Vagas disponíveis nesse dia ({tour.maxQuadriciclos} quadriciclos/turno)
+              </span>
+              <span className={`font-display text-base ${esgotado ? "text-orange" : "text-white"}`}>
+                {esgotado ? "ESGOTADO" : `${availability.available} de ${availability.max}`}
+              </span>
+            </>
+          ) : null}
+        </div>
+
+        {esgotado && (
+          <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-3 bg-stone border border-orange">
+            <AlertCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
+            <span className="text-[11px] text-cream leading-relaxed">
+              Esse dia já está com todas as vagas do turno preenchidas. Escolha outra data acima.
+            </span>
+          </div>
+        )}
       </div>
       <div className="px-4 pb-6 mt-auto pt-4">
-        <PrimaryButton onClick={() => navigate(`/passeio/${id}/dados`)}>CONTINUAR</PrimaryButton>
+        <PrimaryButton onClick={() => navigate(`/passeio/${id}/dados`)} disabled={esgotado || checking}>
+          CONTINUAR
+        </PrimaryButton>
       </div>
     </div>
   );
