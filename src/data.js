@@ -15,7 +15,7 @@ export const TOURS = [
       "Equipamentos de segurança (capacete e afins)",
       "Fotos registradas durante o passeio",
     ],
-    weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa.",
+    weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro).",
   },
   {
     id: "vespertino",
@@ -33,7 +33,7 @@ export const TOURS = [
       "Equipamentos de segurança (capacete e afins)",
       "Fotos registradas durante o passeio",
     ],
-    weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa.",
+    weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro).",
   },
 ];
 

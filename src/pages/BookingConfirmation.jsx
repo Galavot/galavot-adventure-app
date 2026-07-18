@@ -20,7 +20,7 @@ export default function BookingConfirmation() {
     );
   }
 
-  const { tourName, time, participants, customer, total, method } = lastConfirmedBooking;
+  const { tourName, time, participants, customer, total, sinal, restante, method } = lastConfirmedBooking;
   const date = dates[selectedDateIndex];
 
   const whatsappMessage = encodeURIComponent(
@@ -31,7 +31,7 @@ export default function BookingConfirmation() {
       `Pessoas: ${participants}\n` +
       `Nome: ${customer?.name || "-"}\n` +
       `WhatsApp: ${customer?.phone || "-"}\n` +
-      `Pagamento: ${method === "pix" ? "Pix (sinal)" : "Cartão (integral)"} — R$ ${total}\n\n` +
+      `Pagamento: ${method === "pix" ? "Pix" : "Cartão"} — Sinal de R$ ${sinal} pago (50%), restante R$ ${restante} no embarque\n\n` +
       `Aguardo confirmação do ponto de encontro!`
   );
 

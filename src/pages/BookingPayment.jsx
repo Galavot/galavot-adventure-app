@@ -14,7 +14,8 @@ export default function BookingPayment() {
   const [error, setError] = useState(null);
 
   const total = tour.price; // preço é por quadriciclo, não por pessoa
-  const sinal = Math.round(total * 0.3);
+  const sinal = Math.round(total * 0.5);
+  const restante = total - sinal;
 
   const handleConfirm = async () => {
     setError(null);
@@ -28,11 +29,8 @@ export default function BookingPayment() {
         body: JSON.stringify({
           tourId: tour.id,
           tourName: tour.name,
-          amount: method === "pix" ? sinal : total,
-          description:
-            method === "pix"
-              ? `Sinal - ${tour.name} - ${customer.name}`
-              : `${tour.name} - ${customer.name}`,
+          amount: sinal,
+          description: `Sinal (50%) - ${tour.name} - ${customer.name}`,
           payerName: customer.name,
           payerPhone: customer.phone,
         }),
@@ -71,6 +69,8 @@ export default function BookingPayment() {
         participants,
         method,
         total,
+        sinal,
+        restante,
         customer,
       });
 
@@ -99,16 +99,24 @@ export default function BookingPayment() {
           </div>
           <div className="h-px my-3 bg-hline" />
           <div className="flex justify-between">
-            <span className="text-xs text-muted">Total</span>
-            <span className="font-display text-orange text-lg">R$ {total}</span>
+            <span className="text-xs text-muted">Total do passeio</span>
+            <span className="text-xs text-cream">R$ {total}</span>
+          </div>
+          <div className="flex justify-between mt-1.5">
+            <span className="text-xs text-muted">Sinal agora (50%)</span>
+            <span className="font-display text-orange text-lg">R$ {sinal}</span>
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-xs text-muted">Restante no embarque (50%)</span>
+            <span className="text-xs text-cream">R$ {restante}</span>
           </div>
         </div>
 
         <div className="font-display text-muted text-sm tracking-wide mt-4">FORMA DE PAGAMENTO</div>
         <div className="flex flex-col gap-2 mt-2">
           {[
-            { key: "pix", label: "Pix", sub: `Sinal de R$ ${sinal} agora, restante no dia`, icon: Smartphone },
-            { key: "card", label: "Cartão de crédito", sub: `Pagamento integral de R$ ${total}`, icon: CreditCard },
+            { key: "pix", label: "Pix", sub: `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`, icon: Smartphone },
+            { key: "card", label: "Cartão de crédito", sub: `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`, icon: CreditCard },
           ].map(({ key, label, sub, icon: Icon }) => {
             const active = method === key;
             return (

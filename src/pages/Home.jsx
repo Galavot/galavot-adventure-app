@@ -11,7 +11,7 @@ import { TOURS, CONTACT } from "../data.js";
 export default function Home() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const [showRouteMap, setShowRouteMap] = useState(false);
+  const [lightbox, setLightbox] = useState(null); // 'map' | 'explorers' | 'stories' | null
   const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   const handleShare = async () => {
@@ -38,10 +38,10 @@ export default function Home() {
   };
 
   const benefitCards = [
-    { icon: Users, label: "Aventura para Todos" },
-    { icon: Mountain, label: "Cenários Incríveis", onClick: () => setShowRouteMap(true) },
+    { icon: Users, label: "Para Exploradores", onClick: () => setLightbox("explorers") },
+    { icon: Mountain, label: "Cenários Incríveis", onClick: () => setLightbox("map") },
     { icon: Sparkles, label: "Como Funciona", onClick: () => setShowHowItWorks(true) },
-    { icon: Camera, label: "Momentos Inesquecíveis" },
+    { icon: Camera, label: "Histórias que Ficam", onClick: () => setLightbox("stories") },
   ];
 
   return (
@@ -165,8 +165,14 @@ export default function Home() {
       <Testimonials />
       <div className="h-2" />
 
-      {showRouteMap && (
-        <PhotoModal src="/fotos/mapa-roteiro.jpg" alt="Roteiro do passeio" onClose={() => setShowRouteMap(false)} />
+      {lightbox === "map" && (
+        <PhotoModal src="/fotos/mapa-roteiro.jpg" alt="Roteiro do passeio" onClose={() => setLightbox(null)} />
+      )}
+      {lightbox === "explorers" && (
+        <PhotoModal src="/fotos/para-exploradores.jpg" alt="Para Exploradores" onClose={() => setLightbox(null)} />
+      )}
+      {lightbox === "stories" && (
+        <PhotoModal src="/fotos/historias-que-ficam.jpg" alt="Histórias que Ficam" onClose={() => setLightbox(null)} />
       )}
       {showHowItWorks && <HowItWorksModal onClose={() => setShowHowItWorks(false)} />}
     </div>
