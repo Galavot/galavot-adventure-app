@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { BottomNav } from "./components/UI.jsx";
+import FloatingCTA from "./components/FloatingCTA.jsx";
 import { BookingProvider } from "./context/BookingContext.jsx";
 import Home from "./pages/Home.jsx";
 import Tours from "./pages/Tours.jsx";
@@ -18,9 +19,15 @@ function Shell() {
   const location = useLocation();
   const mainTabs = ["/", "/passeios", "/reservas", "/perfil"];
   const showNav = mainTabs.includes(location.pathname);
+  // O CTA flutuante fica visível nas telas de navegação/descoberta, mas some
+  // durante o fluxo de reserva (onde já existe um botão principal na tela)
+  // e no painel administrativo.
+  const hideFloatingCTA =
+    location.pathname.startsWith("/admin") ||
+    /\/passeio\/[^/]+\/(data-horario|dados|pagamento|confirmacao)/.test(location.pathname);
 
   return (
-    <div className="flex flex-col h-screen w-full mx-auto bg-ink" style={{ maxWidth: 480 }}>
+    <div className="flex flex-col h-screen w-full mx-auto bg-ink relative" style={{ maxWidth: 480 }}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/passeios" element={<Tours />} />
@@ -34,6 +41,7 @@ function Shell() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/painel" element={<AdminDashboard />} />
       </Routes>
+      {!hideFloatingCTA && <FloatingCTA aboveNav={showNav} />}
       {showNav && <BottomNav />}
     </div>
   );
