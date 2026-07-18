@@ -63,14 +63,14 @@ export default function BookingDateTime() {
         </div>
 
         <div className="font-display text-muted text-sm tracking-wide mt-5">ESCOLHA O DIA</div>
-        <div className="grid grid-cols-3 gap-2 mt-2">
+        <div className="grid grid-cols-4 gap-2 mt-2">
           {dates.map((d, i) => {
             const active = selectedDateIndex === i;
             return (
               <button
                 key={i}
                 onClick={() => setSelectedDateIndex(i)}
-                className={`flex flex-col items-center rounded-lg px-3 py-3 border ${
+                className={`flex flex-col items-center rounded-lg px-2 py-3 border ${
                   active ? "bg-orange border-orange" : "bg-stone border-hline"
                 }`}
               >
