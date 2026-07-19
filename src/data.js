@@ -83,5 +83,16 @@ export const CONTACT = {
   whatsapp: "5527999927056",
   instagram: "@galavotadventureoficial",
   instagramUrl: "https://www.instagram.com/galavotadventureoficial?igsh=ZXl3cTY2bzJhOG5j",
+  facebookUrl: "https://www.facebook.com/share/1JFThnYbD2/",
+  tiktokUrl: "https://www.tiktok.com/@galavotadventureoficial",
+  youtubeUrl: "https://www.youtube.com/@galavotadventure.oficial",
+  kwaiUrl: "https://k.kwai.com/u/@galavotadventureofic/xYLjCG6z",
+  email: "galavotadventure.oficial@gmail.com",
   city: "Guarapari - ES",
+};
+
+export const SECONDARY_CONTACT = {
+  name: "Sidnei Pereira",
+  phone: "(14) 99123-2345",
+  whatsapp: "5514991232345",
 };

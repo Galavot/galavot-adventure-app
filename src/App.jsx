@@ -13,6 +13,7 @@ import Bookings from "./pages/Bookings.jsx";
 import Profile from "./pages/Profile.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import LinkHub from "./pages/LinkHub.jsx";
 
 function Shell() {
   const location = useLocation();
@@ -33,6 +34,7 @@ function Shell() {
         <Route path="/perfil" element={<Profile />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/painel" element={<AdminDashboard />} />
+        <Route path="/links" element={<LinkHub />} />
       </Routes>
       {showNav && <BottomNav />}
     </div>
