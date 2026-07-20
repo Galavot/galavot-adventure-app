@@ -187,3 +187,5 @@ public/
   Supabase) quando o volume de reservas crescer
 - Adicionar confirmação por e-mail/WhatsApp automática
 - Configurar o domínio próprio
+
+<!-- Acesso via Claude configurado em 2026-07-20 -->
