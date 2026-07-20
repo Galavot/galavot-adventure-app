@@ -3,6 +3,10 @@
 // Salva a reserva no banco de dados (Supabase) assim que o cliente confirma
 // no site. É essa peça que faz o painel /admin conseguir listar as reservas.
 //
+// Se a reserva foi feita por um parceiro logado (partnerId enviado), grava
+// o vínculo e calcula a comissão automaticamente (comissao_percentual do
+// parceiro, padrão 10%).
+//
 // Pré-requisitos (ver README):
 // - Criar projeto gratuito em https://supabase.com
 // - Rodar o SQL de criação da tabela "bookings" (está no README)
@@ -24,13 +28,25 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourId, tourName, date, time, participants, customerName, customerPhone, method, total } = req.body;
+  const { tourId, tourName, date, time, participants, customerName, customerPhone, method, total, partnerId } =
+    req.body;
 
   if (!tourName || !time || !customerName) {
     return res.status(400).json({ error: "Dados da reserva incompletos" });
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  let comissaoValor = null;
+  if (partnerId) {
+    const { data: partner } = await supabase
+      .from("partners")
+      .select("comissao_percentual")
+      .eq("id", partnerId)
+      .single();
+    const percentual = partner?.comissao_percentual ?? 10;
+    comissaoValor = Math.round(Number(total) * (percentual / 100) * 100) / 100;
+  }
 
   const { data, error } = await supabase
     .from("bookings")
@@ -45,6 +61,9 @@ export default async function handler(req, res) {
       payment_method: method,
       total,
       status: "confirmado",
+      partner_id: partnerId || null,
+      comissao_valor: comissaoValor,
+      comissao_paga: false,
     })
     .select()
     .single();

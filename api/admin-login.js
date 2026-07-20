@@ -1,14 +1,9 @@
 // api/admin-login.js
 //
-// Verifica a senha do painel administrativo e devolve um "token" de sessão
-// válido por 12 horas. O token é assinado com ADMIN_SECRET, então não dá
-// pra ser forjado sem conhecer essa chave.
+// Verifica a senha do painel administrativo e devolve um token de sessão
+// válido por 12 horas, assinado com ADMIN_SECRET.
 
-import crypto from "crypto";
-
-function sign(payload, secret) {
-  return crypto.createHmac("sha256", secret).update(payload).digest("hex");
-}
+import { issueToken } from "./_auth.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -30,10 +25,6 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Senha incorreta" });
   }
 
-  const expiry = Date.now() + 12 * 60 * 60 * 1000; // 12 horas
-  const payload = String(expiry);
-  const signature = sign(payload, adminSecret);
-  const token = `${payload}.${signature}`;
-
+  const token = issueToken({ role: "admin" }, adminSecret);
   return res.status(200).json({ token });
 }

@@ -37,7 +37,8 @@ export default function BookingConfirmation() {
 
   const handleClose = () => {
     resetBookingFlow();
-    navigate("/");
+    const isPartner = sessionStorage.getItem("galavot_partner_token");
+    navigate(isPartner ? "/parceiro/painel" : "/");
   };
 
   return (
@@ -84,7 +85,9 @@ export default function BookingConfirmation() {
       </div>
 
       <div className="px-4 pb-6 mt-auto w-full pt-6">
-        <PrimaryButton onClick={handleClose}>VOLTAR AO INÍCIO</PrimaryButton>
+        <PrimaryButton onClick={handleClose}>
+          {sessionStorage.getItem("galavot_partner_token") ? "VOLTAR AO PAINEL" : "VOLTAR AO INÍCIO"}
+        </PrimaryButton>
       </div>
     </div>
   );

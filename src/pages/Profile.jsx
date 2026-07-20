@@ -1,9 +1,11 @@
 import React from "react";
-import { Phone, Instagram } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Phone, Instagram, Handshake, ChevronRight } from "lucide-react";
 import { TopBar, Logo } from "../components/UI.jsx";
 import { CONTACT } from "../data.js";
 
 export default function Profile() {
+  const navigate = useNavigate();
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal">
       <TopBar title="PERFIL" />
@@ -34,6 +36,15 @@ export default function Profile() {
             <span className="text-[13px] text-cream">{CONTACT.instagram}</span>
           </a>
         </div>
+
+        <button
+          onClick={() => navigate("/parceiro")}
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-3 bg-stone border border-hline mt-6"
+        >
+          <Handshake size={16} color="#F2600C" />
+          <span className="text-[13px] text-cream flex-1 text-left">Login / Parceiro</span>
+          <ChevronRight size={16} color="#B7AFA2" />
+        </button>
       </div>
     </div>
   );

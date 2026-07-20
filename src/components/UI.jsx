@@ -20,16 +20,26 @@ export function Logo({ size = 72, className = "" }) {
 
 export function TopBar({ title, showBack = false }) {
   const navigate = useNavigate();
+  const partnerName = typeof window !== "undefined" ? sessionStorage.getItem("galavot_partner_name") : null;
   return (
-    <div className="flex items-center gap-3 px-4 pt-5 pb-3 bg-ink sticky top-0 z-10">
-      {showBack ? (
-        <button onClick={() => navigate(-1)} className="text-cream" aria-label="Voltar">
-          <ChevronLeft size={22} />
-        </button>
-      ) : (
-        <div style={{ width: 22 }} />
+    <div className="flex flex-col bg-ink sticky top-0 z-10">
+      <div className="flex items-center gap-3 px-4 pt-5 pb-3">
+        {showBack ? (
+          <button onClick={() => navigate(-1)} className="text-cream" aria-label="Voltar">
+            <ChevronLeft size={22} />
+          </button>
+        ) : (
+          <div style={{ width: 22 }} />
+        )}
+        <div className="font-display text-white text-xl">{title}</div>
+      </div>
+      {partnerName && (
+        <div className="px-4 pb-2 -mt-1">
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-orange text-ink">
+            Reservando como parceiro: {partnerName}
+          </span>
+        </div>
       )}
-      <div className="font-display text-white text-xl">{title}</div>
     </div>
   );
 }

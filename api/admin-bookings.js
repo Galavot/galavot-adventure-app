@@ -7,10 +7,11 @@
 // obtido em /api/admin-login.
 
 import { createClient } from "@supabase/supabase-js";
-import { verifyAdminToken } from "./_verifyAdmin.js";
+import { verifyToken } from "./_auth.js";
 
 export default async function handler(req, res) {
-  if (!verifyAdminToken(req)) {
+  const auth = verifyToken(req, process.env.ADMIN_SECRET, "admin");
+  if (!auth) {
     return res.status(401).json({ error: "Sessão inválida ou expirada. Faça login novamente." });
   }
 

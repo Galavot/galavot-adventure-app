@@ -104,13 +104,55 @@ adicione as 4 variáveis: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 Vá em `https://seu-site.vercel.app/admin`, digite a senha, e pronto — você
 verá todas as reservas feitas pelo site.
 
-### 7. Domínio próprio (opcional)
+### 7. Configurar a Área de Parceiros (/parceiro)
+
+A área de parceiros usa o **mesmo banco (Supabase)** e a **mesma chave
+secreta (ADMIN_SECRET)** que já configurou no passo 6 — não precisa
+cadastrar nenhuma variável nova na Vercel.
+
+Só falta rodar mais este SQL no **SQL Editor** do Supabase:
+
+```sql
+-- Tabela de parceiros
+create table partners (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  empresa text,
+  codigo text not null unique,
+  senha_hash text not null,
+  comissao_percentual numeric default 10,
+  ativo boolean default true,
+  created_at timestamptz default now()
+);
+
+-- Vincula cada reserva a um parceiro (quando aplicável) e guarda a comissão
+alter table bookings add column partner_id uuid references partners(id);
+alter table bookings add column comissao_valor numeric;
+alter table bookings add column comissao_paga boolean default false;
+```
+
+**Como cadastrar um parceiro:** entre em `/admin` → aba **PARCEIROS** →
+**+ Novo Parceiro**. Você escolhe o nome, código de acesso (o parceiro vai
+usar isso pra logar) e uma senha. O parceiro acessa em `/parceiro` com
+esses dados.
+
+**Como funciona pro parceiro:** ele loga, vê "Minhas Reservas" e o total
+de comissão pendente, e usa o botão "Nova Reserva" — que abre exatamente
+o mesmo fluxo de reserva do cliente final. A única diferença é que a
+reserva feita por ele já grava automaticamente o vínculo e a comissão
+(10% por padrão, editável por parceiro).
+
+**Como fechar a comissão:** no painel `/admin`, aba Parceiros, tem o botão
+"Marcar como pago" que zera o pendente daquele parceiro (assim que você
+fizer o repasse por fora).
+
+### 8. Domínio próprio (opcional)
 Se quiser um domínio tipo `galavotadventure.com.br`:
 - Compre o domínio (Registro.br, ~R$40/ano)
 - Na Vercel, vá em **Project Settings > Domains** e siga as instruções para
   apontar o domínio comprado
 
-### 8. "Instalar" o app no celular
+### 9. "Instalar" o app no celular
 Depois de publicado, ao acessar o site pelo Chrome (Android) ou Safari (iPhone),
 vai aparecer a opção **"Adicionar à tela de início"**. O ícone com nosso logo
 fica salvo no celular do cliente, funcionando como um app de verdade.

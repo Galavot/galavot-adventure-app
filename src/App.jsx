@@ -14,6 +14,8 @@ import Profile from "./pages/Profile.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import LinkHub from "./pages/LinkHub.jsx";
+import PartnerLogin from "./pages/PartnerLogin.jsx";
+import PartnerDashboard from "./pages/PartnerDashboard.jsx";
 
 function Shell() {
   const location = useLocation();
@@ -35,6 +37,8 @@ function Shell() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/painel" element={<AdminDashboard />} />
         <Route path="/links" element={<LinkHub />} />
+        <Route path="/parceiro" element={<PartnerLogin />} />
+        <Route path="/parceiro/painel" element={<PartnerDashboard />} />
       </Routes>
       {showNav && <BottomNav />}
     </div>

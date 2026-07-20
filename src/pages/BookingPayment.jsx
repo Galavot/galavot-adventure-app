@@ -56,6 +56,7 @@ export default function BookingPayment() {
             customerPhone: customer.phone,
             method,
             total,
+            partnerId: sessionStorage.getItem("galavot_partner_id") || null,
           }),
         });
       } catch (dbErr) {
