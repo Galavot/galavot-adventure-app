@@ -2,8 +2,8 @@ export const TOURS = [
   {
     id: "matinal",
     name: "PASSEIO MATINAL",
-    time: "09:00 – 12:00",
-    duration: "3h",
+    time: "A partir das 9h",
+    duration: "3h a 4h",
     level: "Iniciante",
     price: 350,
     maxQuadriciclos: 5,
@@ -15,13 +15,14 @@ export const TOURS = [
       "Equipamentos de segurança (capacete e afins)",
       "Fotos registradas durante o passeio",
     ],
-    weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro).",
+    weight:
+      "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro). Crianças a partir de 10 anos podem participar, acompanhadas dos pais ou responsável.",
   },
   {
     id: "vespertino",
     name: "PASSEIO VESPERTINO",
-    time: "13:00 – 17:00",
-    duration: "4h",
+    time: "A partir das 13h",
+    duration: "3h a 4h",
     level: "Iniciante",
     price: 350,
     maxQuadriciclos: 5,
@@ -33,7 +34,8 @@ export const TOURS = [
       "Equipamentos de segurança (capacete e afins)",
       "Fotos registradas durante o passeio",
     ],
-    weight: "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro).",
+    weight:
+      "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro). Crianças a partir de 10 anos podem participar, acompanhadas dos pais ou responsável.",
   },
 ];
 
@@ -51,7 +53,7 @@ export const ROUTE_STOPS = [
 ];
 
 export const ROUTE_INFO = {
-  duration: "4 horas",
+  duration: "3h a 4h",
   distance: "15 km",
   level: "4 de 5",
   included: ["Quadriciclo", "Capacete", "Guia", "Suporte mecânico durante o passeio", "Fotos (registradas durante o passeio)"],

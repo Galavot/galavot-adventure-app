@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Mountain, Minus, Plus, Clock, MapPin, Gauge, Check, X, Map } from "lucide-react";
+import { Mountain, Minus, Plus, Clock, MapPin, Gauge, Check, X, Map, Compass } from "lucide-react";
 import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import Timeline from "../components/Timeline.jsx";
 import PhotoModal from "../components/PhotoModal.jsx";
+import RouteMapModal from "../components/RouteMapModal.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { TOURS, ROUTE_STOPS, ROUTE_INFO } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -51,13 +52,22 @@ export default function TourDetail() {
           </div>
         </div>
 
-        <button
-          onClick={() => setLightbox("map")}
-          className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 mt-3 bg-stone border border-hline"
-        >
-          <Map size={15} color="#F2600C" />
-          <span className="text-[12px] font-semibold text-cream">Ver rota completa</span>
-        </button>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => setLightbox("map")}
+            className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 bg-stone border border-hline"
+          >
+            <Map size={15} color="#F2600C" />
+            <span className="text-[12px] font-semibold text-cream">Ver rota completa</span>
+          </button>
+          <button
+            onClick={() => setLightbox("interactiveMap")}
+            className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 bg-stone border border-hline"
+          >
+            <Compass size={15} color="#F2600C" />
+            <span className="text-[12px] font-semibold text-cream">Mapa interativo</span>
+          </button>
+        </div>
 
         <div className="font-display text-muted text-sm tracking-wide mt-5">O ROTEIRO</div>
         <div className="mt-2">
@@ -128,6 +138,9 @@ export default function TourDetail() {
       )}
       {lightbox === "map" && (
         <PhotoModal src="/fotos/mapa-roteiro.jpg" alt="Roteiro completo do passeio" onClose={() => setLightbox(null)} />
+      )}
+      {lightbox === "interactiveMap" && (
+        <RouteMapModal stops={timelineSteps} onClose={() => setLightbox(null)} />
       )}
     </div>
   );

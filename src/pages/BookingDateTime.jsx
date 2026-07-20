@@ -58,7 +58,7 @@ export default function BookingDateTime() {
           <Clock size={16} color="#F2600C" />
           <div>
             <div className="font-display text-white text-[16px]">{tour.name}</div>
-            <div className="text-[11px] text-muted">Horário fixo: {tour.time}</div>
+            <div className="text-[11px] text-muted">Saída: {tour.time} · Duração: {tour.duration}</div>
           </div>
         </div>
 

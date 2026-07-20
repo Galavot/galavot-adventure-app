@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2 } from "lucide-react";
+import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2, HelpCircle } from "lucide-react";
 import { TopBar, Logo } from "../components/UI.jsx";
 import InstallInstructionsModal from "../components/InstallInstructionsModal.jsx";
 import { usePWAInstall } from "../hooks/usePWAInstall.js";
@@ -82,8 +82,17 @@ export default function Profile() {
         </div>
 
         <button
-          onClick={() => navigate("/parceiro")}
+          onClick={() => navigate("/faq")}
           className="w-full flex items-center gap-3 rounded-lg px-4 py-3 bg-stone border border-hline mt-6"
+        >
+          <HelpCircle size={16} color="#F2600C" />
+          <span className="text-[13px] text-cream flex-1 text-left">Perguntas Frequentes</span>
+          <ChevronRight size={16} color="#B7AFA2" />
+        </button>
+
+        <button
+          onClick={() => navigate("/parceiro")}
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-3 bg-stone border border-hline mt-2"
         >
           <Handshake size={16} color="#F2600C" />
           <span className="text-[13px] text-cream flex-1 text-left">Login / Parceiro</span>
