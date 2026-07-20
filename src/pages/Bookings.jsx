@@ -4,7 +4,7 @@ import { TopBar, Pill } from "../components/UI.jsx";
 import { useBooking } from "../context/BookingContext.jsx";
 
 const PAST_BOOKINGS = [
-  { tour: "PASSEIO MATINAL", date: "02 JUN · 08:00", status: "Concluído", people: 4, isExample: true },
+  { tour: "PASSEIO MATINAL", date: "02 JUN · 08:00", status: "Concluído", people: 2, isExample: true },
 ];
 
 export default function Bookings() {
