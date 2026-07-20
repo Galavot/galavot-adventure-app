@@ -10,11 +10,11 @@ import { TopBar } from "../components/UI.jsx";
 const FAQ_ITEMS = [
   {
     q: "Preciso de CNH para pilotar o quadriciclo?",
-    a: "Sim. Para pilotar é obrigatório apresentar CNH válida no check-in. Quem for de garupa não precisa de habilitação.",
+    a: "Sim. Para pilotar é obrigatória a apresentação de CNH categoria B válida, conforme as exigências do Detran. O passageiro (garupa) não precisa ser habilitado.",
   },
   {
     q: "Qual a idade mínima para participar?",
-    a: "A partir de 10 anos, sempre acompanhado dos pais ou responsável durante todo o passeio.",
+    a: "A partir de 10 anos, sempre como passageira (na garupa) e acompanhada dos pais ou responsável durante todo o passeio. Crianças não pilotam o quadriciclo.",
   },
   {
     q: "Qual o peso máximo permitido?",
@@ -42,7 +42,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Existe alguma regra de respeito à natureza?",
-    a: "Sim: não jogar lixo nas trilhas, não danificar a vegetação, não assustar os animais e utilizar apenas as trilhas autorizadas.",
+    a: "Sim: preservar a natureza e permanecer sempre nas trilhas autorizadas fazem parte das regras do passeio, junto com respeitar os limites do grupo e do veículo.",
   },
 ];
 

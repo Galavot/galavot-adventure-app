@@ -16,7 +16,7 @@ export const TOURS = [
       "Fotos registradas durante o passeio",
     ],
     weight:
-      "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro). Crianças a partir de 10 anos podem participar, acompanhadas dos pais ou responsável.",
+      "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro). Crianças a partir de 10 anos podem participar como passageiras (na garupa), acompanhadas dos pais ou responsável.",
   },
   {
     id: "vespertino",
@@ -35,7 +35,7 @@ export const TOURS = [
       "Fotos registradas durante o passeio",
     ],
     weight:
-      "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro). Crianças a partir de 10 anos podem participar, acompanhadas dos pais ou responsável.",
+      "Valor por quadriciclo (até 2 pessoas). O valor não altera caso vá apenas 1 pessoa. Peso máximo permitido: 180kg (piloto + passageiro). Crianças a partir de 10 anos podem participar como passageiras (na garupa), acompanhadas dos pais ou responsável.",
   },
 ];
 
