@@ -7,12 +7,19 @@
 // o vínculo e calcula a comissão automaticamente (comissao_percentual do
 // parceiro, padrão 10%).
 //
+// SEGURANÇA: o valor da reserva (total) NUNCA é aceito como veio do
+// navegador — é sempre recalculado aqui a partir do preço oficial do
+// passeio (TOURS, em src/data.js). O limite de quadriciclos por turno
+// também é reconferido aqui no servidor, não só na tela de escolha de data,
+// pra evitar overbooking se duas pessoas reservarem ao mesmo tempo.
+//
 // Pré-requisitos (ver README):
 // - Criar projeto gratuito em https://supabase.com
 // - Rodar o SQL de criação da tabela "bookings" (está no README)
 // - Configurar as variáveis de ambiente SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY
 
 import { createClient } from "@supabase/supabase-js";
+import { TOURS } from "../src/data.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -28,14 +35,38 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourId, tourName, date, time, participants, customerName, customerPhone, method, total, partnerId } =
-    req.body;
+  const { tourId, date, time, participants, customerName, customerPhone, method, partnerId } = req.body;
 
-  if (!tourName || !time || !customerName) {
+  if (!tourId || !time || !customerName || !date) {
     return res.status(400).json({ error: "Dados da reserva incompletos" });
   }
 
+  // O passeio precisa existir na lista oficial — nunca confiamos em
+  // tourName/total vindos do cliente.
+  const tour = TOURS.find((t) => t.id === tourId);
+  if (!tour) {
+    return res.status(400).json({ error: "Passeio inválido" });
+  }
+
+  const tourName = tour.name;
+  const total = tour.price;
+  const maxQuadriciclos = tour.maxQuadriciclos || 5;
+
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  // Reconfere disponibilidade no momento de salvar, e não só na tela
+  // anterior — reduz a janela de overbooking quando duas pessoas reservam
+  // ao mesmo tempo o último horário disponível.
+  const { count, error: countError } = await supabase
+    .from("bookings")
+    .select("*", { count: "exact", head: true })
+    .eq("tour_id", tourId)
+    .eq("booking_date", date)
+    .neq("status", "cancelado");
+
+  if (!countError && (count || 0) >= maxQuadriciclos) {
+    return res.status(409).json({ error: "Esse horário acabou de lotar. Escolha outra data ou turno." });
+  }
 
   let comissaoValor = null;
   if (partnerId) {
@@ -45,7 +76,7 @@ export default async function handler(req, res) {
       .eq("id", partnerId)
       .single();
     const percentual = partner?.comissao_percentual ?? 10;
-    comissaoValor = Math.round(Number(total) * (percentual / 100) * 100) / 100;
+    comissaoValor = Math.round(total * (percentual / 100) * 100) / 100;
   }
 
   const { data, error } = await supabase

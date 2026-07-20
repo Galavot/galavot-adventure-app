@@ -39,29 +39,33 @@ export default function BookingPayment() {
       if (!res.ok) throw new Error("Falha ao criar preferência de pagamento");
       const data = await res.json();
 
-      // Salva a reserva no banco (pra aparecer no painel /admin).
-      // Se essa chamada falhar, não bloqueia o cliente — a reserva ainda
-      // chega pelo WhatsApp na tela de confirmação.
-      try {
-        await fetch("/api/create-booking", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            tourId: tour.id,
-            tourName: tour.name,
-            date: dates[selectedDateIndex].iso,
-            time: selectedTime,
-            participants,
-            customerName: customer.name,
-            customerPhone: customer.phone,
-            method,
-            total,
-            partnerId: sessionStorage.getItem("galavot_partner_id") || null,
-          }),
-        });
-      } catch (dbErr) {
-        // Silencioso de propósito — ver comentário acima.
+      // Salva a reserva no banco (pra aparecer no painel /admin). O servidor
+      // reconfere o limite de quadriciclos nesse momento — se acabou de
+      // lotar (ex: duas pessoas reservando ao mesmo tempo), avisamos o
+      // cliente em vez de deixar ele achar que reservou.
+      const bookingRes = await fetch("/api/create-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourId: tour.id,
+          date: dates[selectedDateIndex].iso,
+          time: selectedTime,
+          participants,
+          customerName: customer.name,
+          customerPhone: customer.phone,
+          method,
+          partnerId: sessionStorage.getItem("galavot_partner_id") || null,
+        }),
+      });
+
+      if (bookingRes.status === 409) {
+        const data = await bookingRes.json();
+        setError(data.error || "Esse horário acabou de lotar. Volte e escolha outra data.");
+        setLoading(false);
+        return;
       }
+      // Outros erros (ex: banco fora do ar momentaneamente) não bloqueiam o
+      // cliente — a reserva ainda chega pelo WhatsApp na tela de confirmação.
 
       setLastConfirmedBooking({
         tourId: tour.id,
