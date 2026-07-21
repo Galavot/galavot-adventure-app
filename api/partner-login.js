@@ -2,10 +2,14 @@
 //
 // Verifica o código de acesso + senha do parceiro contra a tabela
 // "partners" no Supabase, e devolve um token de sessão (válido 12h).
+//
+// SEGURANÇA: bloqueia temporariamente um IP depois de várias tentativas
+// erradas seguidas (ver api/_rateLimit.js), pra dificultar força bruta.
 
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import { issueToken } from "./_auth.js";
+import { getClientIp, checkRateLimit, registerFailedAttempt } from "./_rateLimit.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -26,6 +30,14 @@ export default async function handler(req, res) {
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
+  const ip = getClientIp(req);
+
+  const { blocked, retryAfterMinutes } = await checkRateLimit(supabase, ip, "partner");
+  if (blocked) {
+    return res.status(429).json({
+      error: `Muitas tentativas erradas. Tente novamente em ${retryAfterMinutes} minutos.`,
+    });
+  }
 
   const { data: partner, error } = await supabase
     .from("partners")
@@ -35,11 +47,13 @@ export default async function handler(req, res) {
     .single();
 
   if (error || !partner) {
+    await registerFailedAttempt(supabase, ip, "partner");
     return res.status(401).json({ error: "Código ou senha incorretos" });
   }
 
   const senhaValida = await bcrypt.compare(senha, partner.senha_hash);
   if (!senhaValida) {
+    await registerFailedAttempt(supabase, ip, "partner");
     return res.status(401).json({ error: "Código ou senha incorretos" });
   }
 

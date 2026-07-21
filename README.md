@@ -131,6 +131,26 @@ alter table bookings add column comissao_valor numeric;
 alter table bookings add column comissao_paga boolean default false;
 ```
 
+### Proteção contra força bruta no login (recomendado)
+
+Pra dificultar tentativas de adivinhar a senha do `/admin` ou do `/parceiro`,
+o sistema bloqueia por 15 minutos um IP que errar a senha 8 vezes seguidas.
+Isso precisa de mais uma tabelinha no Supabase — rode este SQL também no
+**SQL Editor**:
+
+```sql
+create table login_attempts (
+  id uuid primary key default gen_random_uuid(),
+  ip text not null,
+  scope text not null,
+  created_at timestamptz default now()
+);
+create index login_attempts_ip_scope_idx on login_attempts (ip, scope, created_at);
+```
+
+Se você não rodar esse SQL, o login continua funcionando normalmente — só
+fica sem essa proteção extra contra força bruta.
+
 **Como cadastrar um parceiro:** entre em `/admin` → aba **PARCEIROS** →
 **+ Novo Parceiro**. Você escolhe o nome, código de acesso (o parceiro vai
 usar isso pra logar) e uma senha. O parceiro acessa em `/parceiro` com

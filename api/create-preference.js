@@ -5,11 +5,19 @@
 // Mercado Pago, retornando o link de checkout (init_point) para redirecionar
 // o cliente.
 //
+// SEGURANÇA: o valor cobrado (amount) NUNCA é aceito como veio do
+// navegador — é sempre recalculado aqui a partir do preço oficial do
+// passeio (TOURS, em src/data.js), igual já é feito em create-booking.js.
+// Sem isso, alguém poderia manipular a requisição e pagar um valor menor
+// que o real.
+//
 // Pré-requisitos:
 // 1. Criar conta em https://www.mercadopago.com.br
 // 2. Pegar o Access Token em: Seu negócio > Configurações > Credenciais
 // 3. Adicionar a variável de ambiente MP_ACCESS_TOKEN no projeto da Vercel
 //    (Project Settings > Environment Variables)
+
+import { TOURS } from "../src/data.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -23,11 +31,14 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourName, amount, description, payerName } = req.body;
+  const { tourId, payerName } = req.body;
 
-  if (!tourName || !amount) {
-    return res.status(400).json({ error: "Dados da reserva incompletos" });
+  const tour = TOURS.find((t) => t.id === tourId);
+  if (!tour) {
+    return res.status(400).json({ error: "Passeio inválido" });
   }
+
+  const sinal = Math.round(tour.price * 0.5);
 
   try {
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -39,9 +50,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         items: [
           {
-            title: description || tourName,
+            title: `Sinal (50%) - ${tour.name}`,
             quantity: 1,
-            unit_price: Number(amount),
+            unit_price: sinal,
             currency_id: "BRL",
           },
         ],

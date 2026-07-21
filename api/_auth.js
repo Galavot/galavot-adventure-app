@@ -10,6 +10,15 @@ function sign(payload, secret) {
   return crypto.createHmac("sha256", secret).update(payload).digest("hex");
 }
 
+// Compara duas strings em tempo constante — evita que um atacante consiga
+// "adivinhar" a assinatura correta medindo o tempo de resposta.
+function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export function issueToken({ role, id = "" }, secret, hours = 12) {
   const expiry = Date.now() + hours * 60 * 60 * 1000;
   const payload = `${expiry}:${role}:${id}`;
@@ -28,7 +37,7 @@ export function verifyToken(req, secret, expectedRole) {
   const signature = token.slice(dotIndex + 1);
 
   const expected = sign(payload, secret);
-  if (signature !== expected) return null;
+  if (!safeEqual(signature, expected)) return null;
 
   const [expiryStr, role, id] = payload.split(":");
   const expiry = Number(expiryStr);
