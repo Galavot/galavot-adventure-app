@@ -23,6 +23,9 @@ export default function Profile() {
         <Logo size={80} />
         <div className="font-display text-white text-lg mt-3">GALAVOT ADVENTURE</div>
         <div className="text-xs text-muted">{CONTACT.city}</div>
+        {CONTACT.cnpj && (
+          <div className="text-[10px] text-muted mt-0.5">CNPJ {CONTACT.cnpj}</div>
+        )}
 
         {(canInstall || isInstalled) && (
           <div className="w-full mt-5">

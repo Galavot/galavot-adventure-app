@@ -90,6 +90,9 @@ export default function LinkHub() {
         <MapPin size={12} color="#B7AFA2" />
         <span className="text-[12px] text-muted">{CONTACT.city}</span>
       </div>
+      {CONTACT.cnpj && (
+        <span className="text-[10px] text-muted mt-0.5">CNPJ {CONTACT.cnpj}</span>
+      )}
       <div className="text-[12px] text-cream text-center mt-3 max-w-[260px] leading-relaxed">
         Aventura • Natureza • Liberdade
         <br />

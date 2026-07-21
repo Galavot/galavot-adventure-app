@@ -91,6 +91,9 @@ export const CONTACT = {
   kwaiUrl: "https://k.kwai.com/u/@galavotadventureofic/xYLjCG6z",
   email: "galavotadventure.oficial@gmail.com",
   city: "Guarapari - ES",
+  // Preencha assim que o CNPJ sair (ex: "12.345.678/0001-90") — ele aparece
+  // sozinho no rodapé do Perfil assim que esse campo deixar de estar vazio.
+  cnpj: "",
 };
 
 export const SECONDARY_CONTACT = {
