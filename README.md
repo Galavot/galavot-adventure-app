@@ -151,6 +151,23 @@ create index login_attempts_ip_scope_idx on login_attempts (ip, scope, created_a
 Se você não rodar esse SQL, o login continua funcionando normalmente — só
 fica sem essa proteção extra contra força bruta.
 
+### Camada extra: Row Level Security (RLS)
+
+Todo o acesso ao banco passa pelas funções em `api/` (usando a chave
+`service_role`, que sempre ignora o RLS) — o navegador do cliente nunca
+fala direto com o Supabase. Por isso o RLS não é obrigatório aqui. Mesmo
+assim, é uma boa prática de segurança em camadas: ativa o RLS sem nenhuma
+política, o que bloqueia por padrão qualquer acesso vindo de fora das
+funções do servidor (caso a chave pública do projeto seja usada ou exposta
+por engano no futuro). Não muda nada no funcionamento do site. Rode no
+**SQL Editor** do Supabase:
+
+```sql
+alter table bookings enable row level security;
+alter table partners enable row level security;
+alter table login_attempts enable row level security;
+```
+
 **Como cadastrar um parceiro:** entre em `/admin` → aba **PARCEIROS** →
 **+ Novo Parceiro**. Você escolhe o nome, código de acesso (o parceiro vai
 usar isso pra logar) e uma senha. O parceiro acessa em `/parceiro` com
