@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2, HelpCircle } from "lucide-react";
+import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2, HelpCircle, MapPin } from "lucide-react";
 import { TopBar, Logo } from "../components/UI.jsx";
 import InstallInstructionsModal from "../components/InstallInstructionsModal.jsx";
 import { usePWAInstall } from "../hooks/usePWAInstall.js";
@@ -48,6 +48,20 @@ export default function Profile() {
             </p>
           </div>
         )}
+
+        <div className="font-display text-muted text-sm tracking-wide mt-6 self-start">PONTO DE ENCONTRO</div>
+        <a
+          href={CONTACT.meetingPoint.mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-3 mt-2 bg-orange"
+        >
+          <MapPin size={16} color="#1A1A1A" />
+          <div className="flex-1 text-left">
+            <div className="font-display text-ink text-[14px] tracking-wide">COMO CHEGAR</div>
+            <div className="text-[11px] text-ink opacity-80">{CONTACT.meetingPoint.address}</div>
+          </div>
+        </a>
 
         <div className="font-display text-muted text-sm tracking-wide mt-6 self-start">GESTORES DA GALAVOT</div>
         <div className="w-full flex flex-col gap-2 mt-2">

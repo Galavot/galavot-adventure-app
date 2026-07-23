@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, MapPin, Phone } from "lucide-react";
+import { CheckCircle2, MapPin, Phone, Navigation } from "lucide-react";
 import { TopBar, PrimaryButton } from "../components/UI.jsx";
 import { CONTACT } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -32,7 +32,8 @@ export default function BookingConfirmation() {
       `Nome: ${customer?.name || "-"}\n` +
       `WhatsApp: ${customer?.phone || "-"}\n` +
       `Pagamento: ${method === "pix" ? "Pix" : "Cartão"} — Sinal de R$ ${sinal} pago (50%), restante R$ ${restante} no embarque\n\n` +
-      `Aguardo confirmação do ponto de encontro!`
+      `Ponto de encontro: ${CONTACT.meetingPoint.address}\n${CONTACT.meetingPoint.mapsUrl}\n\n` +
+      `Aguardo confirmação!`
   );
 
   const handleClose = () => {
@@ -66,15 +67,25 @@ export default function BookingConfirmation() {
           <div className="h-px my-3 bg-hline" />
           <div className="flex items-center gap-2">
             <MapPin size={14} color="#F2600C" />
-            <span className="text-[11px] text-cream">Ponto de encontro: enviado no WhatsApp</span>
+            <span className="text-[11px] text-cream">Ponto de encontro: {CONTACT.meetingPoint.address}</span>
           </div>
         </div>
+
+        <a
+          href={CONTACT.meetingPoint.mapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 rounded-lg py-3 mt-4 bg-orange"
+        >
+          <Navigation size={16} color="#1A1A1A" />
+          <span className="font-display text-ink text-[15px]">COMO CHEGAR</span>
+        </a>
 
         <a
           href={`https://wa.me/${CONTACT.whatsapp}?text=${whatsappMessage}`}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-center gap-2 rounded-lg py-3 mt-4 bg-moss"
+          className="flex items-center justify-center gap-2 rounded-lg py-3 mt-3 bg-moss"
         >
           <Phone size={16} color="#fff" />
           <span className="font-display text-white text-[15px]">ENVIAR RESERVA PRO WHATSAPP</span>

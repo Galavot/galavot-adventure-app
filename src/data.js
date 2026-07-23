@@ -94,6 +94,12 @@ export const CONTACT = {
   // Preencha assim que o CNPJ sair (ex: "12.345.678/0001-90") — ele aparece
   // sozinho no rodapé do Perfil assim que esse campo deixar de estar vazio.
   cnpj: "",
+  meetingPoint: {
+    address: "Estr. Rota da Ferradura - Guarapari, ES, 29227-640",
+    lat: -20.643258,
+    lng: -40.559039,
+    mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=-20.643258,-40.559039",
+  },
 };
 
 export const SECONDARY_CONTACT = {
