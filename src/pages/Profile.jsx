@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2, HelpCircle, MapPin } from "lucide-react";
 import { TopBar, Logo } from "../components/UI.jsx";
 import InstallInstructionsModal from "../components/InstallInstructionsModal.jsx";
-import { usePWAInstall } from "../hooks/usePWAInstall.js";
+import { usePWAInstallContext } from "../context/PWAInstallContext.jsx";
 import { CONTACT, SECONDARY_CONTACT } from "../data.js";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { canInstall, isInstalled, platform, promptInstall } = usePWAInstall();
+  const { canInstall, isInstalled, platform, promptInstall } = usePWAInstallContext();
   const [showInstructions, setShowInstructions] = useState(false);
 
   const handleInstallClick = async () => {
@@ -27,27 +27,25 @@ export default function Profile() {
           <div className="text-[10px] text-muted mt-0.5">CNPJ {CONTACT.cnpj}</div>
         )}
 
-        {(canInstall || isInstalled) && (
-          <div className="w-full mt-5">
-            {isInstalled ? (
-              <div className="flex items-center justify-center gap-2 rounded-lg py-3 bg-stone border border-hline">
-                <CheckCircle2 size={16} color="#6E7A4F" />
-                <span className="text-[13px] font-semibold text-cream">App já instalado neste dispositivo</span>
-              </div>
-            ) : (
-              <button
-                onClick={handleInstallClick}
-                className="w-full flex items-center justify-center gap-2 rounded-lg py-3 bg-orange text-ink"
-              >
-                <Download size={16} />
-                <span className="font-display text-[15px] tracking-wide">BAIXAR O APP NO CELULAR</span>
-              </button>
-            )}
-            <p className="text-[10px] text-muted text-center mt-1.5 px-4">
-              Instala o app na sua tela inicial, sem ocupar espaço de loja e sem downloads pesados.
-            </p>
-          </div>
-        )}
+        <div className="w-full mt-5">
+          {isInstalled ? (
+            <div className="flex items-center justify-center gap-2 rounded-lg py-3 bg-stone border border-hline">
+              <CheckCircle2 size={16} color="#6E7A4F" />
+              <span className="text-[13px] font-semibold text-cream">App já instalado neste dispositivo</span>
+            </div>
+          ) : (
+            <button
+              onClick={handleInstallClick}
+              className="w-full flex items-center justify-center gap-2 rounded-lg py-3 bg-orange text-ink"
+            >
+              <Download size={16} />
+              <span className="font-display text-[15px] tracking-wide">BAIXAR O APP NO CELULAR</span>
+            </button>
+          )}
+          <p className="text-[10px] text-muted text-center mt-1.5 px-4">
+            Instala o app na sua tela inicial, sem ocupar espaço de loja e sem downloads pesados.
+          </p>
+        </div>
 
         <div className="font-display text-muted text-sm tracking-wide mt-6 self-start">PONTO DE ENCONTRO</div>
         <a

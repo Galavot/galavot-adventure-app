@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { BottomNav } from "./components/UI.jsx";
 import { BookingProvider } from "./context/BookingContext.jsx";
+import { PWAInstallProvider } from "./context/PWAInstallContext.jsx";
 import Home from "./pages/Home.jsx";
 import Tours from "./pages/Tours.jsx";
 import TourDetail from "./pages/TourDetail.jsx";
@@ -49,8 +50,10 @@ function Shell() {
 
 export default function App() {
   return (
-    <BookingProvider>
-      <Shell />
-    </BookingProvider>
+    <PWAInstallProvider>
+      <BookingProvider>
+        <Shell />
+      </BookingProvider>
+    </PWAInstallProvider>
   );
 }
