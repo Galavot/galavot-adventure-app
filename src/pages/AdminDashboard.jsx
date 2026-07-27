@@ -75,7 +75,7 @@ export default function AdminDashboard() {
     <div className="flex-1 overflow-y-auto bg-charcoal">
       <div className="flex items-center justify-between px-4 pt-5 pb-3 bg-ink sticky top-0 z-10">
         <div className="font-display text-white text-xl">
-          {{ reservas: "RESERVAS", parceiros: "PARCEIROS", guias: "GUIAS", listadia: "LISTA DO DIA" }[tab]}
+          {{ reservas: "RESERVAS", parceiros: "PARCEIROS", guias: "GUIAS", listadia: "AGENDA" }[tab]}
         </div>
         <div className="flex items-center gap-3">
           <button onClick={loadBookings} aria-label="Atualizar">
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
           { key: "reservas", label: "RESERVAS" },
           { key: "parceiros", label: "PARCEIROS" },
           { key: "guias", label: "GUIAS" },
-          { key: "listadia", label: "LISTA DO DIA" },
+          { key: "listadia", label: "AGENDA" },
         ].map((t) => (
           <button
             key={t.key}
