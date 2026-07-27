@@ -1,7 +1,11 @@
 // api/admin-partners.js
 //
-// GET  -> lista todos os parceiros
-// POST -> cria um novo parceiro (nome, empresa, código, senha)
+// GET    -> lista todos os parceiros
+// POST   -> cria um novo parceiro (nome, empresa, código, senha)
+// PATCH  -> ativa/desativa um parceiro
+// DELETE -> exclui um parceiro (só é permitido se não houver reserva
+//           vinculada a ele — senão, avisa e sugere desativar em vez de
+//           excluir, pra não perder o histórico dessas reservas)
 //
 // Protegida por token de admin.
 
@@ -66,6 +70,28 @@ export default async function handler(req, res) {
     if (error) return res.status(500).json({ error: error.message });
     const { senha_hash: _omit, ...partner } = data;
     return res.status(200).json({ partner });
+  }
+
+  if (req.method === "DELETE") {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: "id é obrigatório" });
+
+    // Confere se existe alguma reserva vinculada a esse parceiro antes de
+    // excluir — evita perder o histórico de comissão de reservas reais.
+    const { count } = await supabase
+      .from("bookings")
+      .select("*", { count: "exact", head: true })
+      .eq("partner_id", id);
+
+    if ((count || 0) > 0) {
+      return res.status(409).json({
+        error: `Esse parceiro tem ${count} reserva(s) vinculada(s) e não pode ser excluído — desative-o em vez disso, pra manter o histórico.`,
+      });
+    }
+
+    const { error } = await supabase.from("partners").delete().eq("id", id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: "Método não permitido" });

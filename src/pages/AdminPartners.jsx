@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { UserPlus, Wallet, Power } from "lucide-react";
+import { UserPlus, Wallet, Power, Trash2 } from "lucide-react";
 import { PrimaryButton } from "../components/UI.jsx";
 
 export default function AdminPartners({ bookings }) {
@@ -8,6 +8,7 @@ export default function AdminPartners({ bookings }) {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [form, setForm] = useState({ nome: "", empresa: "", codigo: "", senha: "", comissaoPercentual: 10 });
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
@@ -87,6 +88,28 @@ export default function AdminPartners({ bookings }) {
       window.location.reload();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleDelete = async (partnerId) => {
+    if (confirmDeleteId !== partnerId) {
+      setConfirmDeleteId(partnerId);
+      return;
+    }
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-partners", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ id: partnerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao excluir parceiro");
+      setConfirmDeleteId(null);
+      loadPartners();
+    } catch (err) {
+      setError(err.message);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -195,6 +218,17 @@ export default function AdminPartners({ bookings }) {
                 </button>
               )}
             </div>
+            <button
+              onClick={() => handleDelete(p.id)}
+              className={`w-full flex items-center justify-center gap-1.5 mt-3 py-2 rounded-lg text-[11px] font-semibold border ${
+                confirmDeleteId === p.id
+                  ? "bg-orange text-ink border-orange"
+                  : "bg-ink text-muted border-hline"
+              }`}
+            >
+              <Trash2 size={12} />
+              {confirmDeleteId === p.id ? "Toque de novo pra confirmar exclusão" : "Excluir parceiro"}
+            </button>
           </div>
         );
       })}
