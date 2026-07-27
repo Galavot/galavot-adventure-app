@@ -206,6 +206,29 @@ create table guides (
 alter table guides enable row level security;
 ```
 
+### Preço editável (promoções) + pagamento à vista
+
+Agora o preço de cada passeio pode ser alterado direto no `/admin` → aba
+**PREÇOS** (útil pra promoções), sem precisar de um novo deploy. E o
+cliente pode escolher pagar à vista em vez de só o sinal de 50%. Precisa
+de mais SQL no Supabase:
+
+```sql
+create table tour_prices (
+  tour_id text primary key,
+  price numeric not null,
+  updated_at timestamptz default now()
+);
+alter table tour_prices enable row level security;
+
+alter table bookings add column payment_plan text default 'sinal';
+alter table bookings add column valor_pago_inicial numeric;
+```
+
+Enquanto a tabela `tour_prices` estiver vazia, o site usa o preço padrão
+(R$350) normalmente. Assim que você editar um preço pelo admin, uma linha
+é criada ali e o site passa a usar esse valor.
+
 **Como cadastrar um parceiro:** entre em `/admin` → aba **PARCEIROS** →
 **+ Novo Parceiro**. Você escolhe o nome, código de acesso (o parceiro vai
 usar isso pra logar) e uma senha. O parceiro acessa em `/parceiro` com

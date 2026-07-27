@@ -7,9 +7,11 @@ import HowItWorksModal from "../components/HowItWorksModal.jsx";
 import Testimonials from "../components/Testimonials.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { TOURS, CONTACT } from "../data.js";
+import { usePrices } from "../context/PricesContext.jsx";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { prices } = usePrices();
   const [copied, setCopied] = useState(false);
   const [lightbox, setLightbox] = useState(null); // 'map' | 'explorers' | 'stories' | null
   const [showHowItWorks, setShowHowItWorks] = useState(false);
@@ -152,7 +154,7 @@ export default function Home() {
                   <span className="text-[11px] text-muted">{t.time}</span>
                 </div>
                 <div className="font-display text-orange text-base mt-1.5">
-                  R$ {t.price}
+                  R$ {prices[t.id] ?? t.price}
                   <span className="font-body text-[10px] text-muted"> /quadriciclo</span>
                 </div>
               </div>

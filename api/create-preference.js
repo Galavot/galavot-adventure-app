@@ -6,10 +6,10 @@
 // o cliente.
 //
 // SEGURANÇA: o valor cobrado (amount) NUNCA é aceito como veio do
-// navegador — é sempre recalculado aqui a partir do preço oficial do
-// passeio (TOURS, em src/data.js), igual já é feito em create-booking.js.
-// Sem isso, alguém poderia manipular a requisição e pagar um valor menor
-// que o real.
+// navegador — é sempre recalculado aqui a partir do preço ATUAL do passeio
+// (tabela "tour_prices", com fallback pro padrão em src/data.js), igual já
+// é feito em create-booking.js. Sem isso, alguém poderia manipular a
+// requisição e pagar um valor menor que o real.
 //
 // Pré-requisitos:
 // 1. Criar conta em https://www.mercadopago.com.br
@@ -17,6 +17,7 @@
 // 3. Adicionar a variável de ambiente MP_ACCESS_TOKEN no projeto da Vercel
 //    (Project Settings > Environment Variables)
 
+import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
 
 export default async function handler(req, res) {
@@ -31,14 +32,24 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourId, payerName } = req.body;
+  const { tourId, payerName, paymentPlan } = req.body;
 
   const tour = TOURS.find((t) => t.id === tourId);
   if (!tour) {
     return res.status(400).json({ error: "Passeio inválido" });
   }
 
-  const sinal = Math.round(tour.price * 0.5);
+  let total = tour.price;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseUrl && serviceKey) {
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { data: priceRow } = await supabase.from("tour_prices").select("price").eq("tour_id", tourId).single();
+    if (priceRow?.price) total = Number(priceRow.price);
+  }
+
+  const plan = paymentPlan === "vista" ? "vista" : "sinal";
+  const amount = plan === "vista" ? total : Math.round(total * 0.5);
 
   try {
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -50,9 +61,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         items: [
           {
-            title: `Sinal (50%) - ${tour.name}`,
+            title: plan === "vista" ? `À vista - ${tour.name}` : `Sinal (50%) - ${tour.name}`,
             quantity: 1,
-            unit_price: sinal,
+            unit_price: amount,
             currency_id: "BRL",
           },
         ],

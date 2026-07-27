@@ -4,9 +4,11 @@ import { Mountain, Clock, MapPin } from "lucide-react";
 import { TopBar, Pill } from "../components/UI.jsx";
 import Reveal from "../components/Reveal.jsx";
 import { TOURS } from "../data.js";
+import { usePrices } from "../context/PricesContext.jsx";
 
 export default function Tours() {
   const navigate = useNavigate();
+  const { prices } = usePrices();
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal">
       <TopBar title="PASSEIOS" />
@@ -39,7 +41,7 @@ export default function Tours() {
                 </div>
                 <div className="flex justify-between items-center mt-4">
                   <div className="font-display text-orange text-xl">
-                    R$ {t.price}
+                    R$ {prices[t.id] ?? t.price}
                     <span className="font-body text-[11px] text-muted"> /quadriciclo</span>
                   </div>
                   <button

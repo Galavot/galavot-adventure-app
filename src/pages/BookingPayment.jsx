@@ -1,21 +1,35 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CreditCard, Smartphone, AlertCircle } from "lucide-react";
+import { CreditCard, Smartphone, AlertCircle, Check, Wallet } from "lucide-react";
 import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import { TOURS } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
+import { usePrices } from "../context/PricesContext.jsx";
 
 export default function BookingPayment() {
   const { id } = useParams();
   const navigate = useNavigate();
   const tour = TOURS.find((t) => t.id === id);
-  const { dates, selectedDateIndex, participants, selectedTime, method, setMethod, customer, setLastConfirmedBooking } = useBooking();
+  const { prices } = usePrices();
+  const {
+    dates,
+    selectedDateIndex,
+    participants,
+    selectedTime,
+    method,
+    setMethod,
+    paymentPlan,
+    setPaymentPlan,
+    customer,
+    setLastConfirmedBooking,
+  } = useBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const total = tour.price; // preço é por quadriciclo, não por pessoa
+  const total = prices[tour.id] ?? tour.price; // preço é por quadriciclo, não por pessoa
   const sinal = Math.round(total * 0.5);
   const restante = total - sinal;
+  const valorAgora = paymentPlan === "vista" ? total : sinal;
 
   const handleConfirm = async () => {
     setError(null);
@@ -28,11 +42,9 @@ export default function BookingPayment() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tourId: tour.id,
-          tourName: tour.name,
-          amount: sinal,
-          description: `Sinal (50%) - ${tour.name} - ${customer.name}`,
           payerName: customer.name,
           payerPhone: customer.phone,
+          paymentPlan,
         }),
       });
 
@@ -54,6 +66,7 @@ export default function BookingPayment() {
           customerName: customer.name,
           customerPhone: customer.phone,
           method,
+          paymentPlan,
           partnerId: sessionStorage.getItem("galavot_partner_id") || null,
           manualVistoEm: customer.manualVistoEm,
           termoVistoEm: customer.termoVistoEm,
@@ -85,9 +98,11 @@ export default function BookingPayment() {
         time: selectedTime,
         participants,
         method,
+        paymentPlan,
         total,
         sinal,
         restante,
+        valorAgora,
         customer,
         bookingCode,
       });
@@ -109,6 +124,48 @@ export default function BookingPayment() {
       <TopBar title="PAGAMENTO" showBack />
       <TrailProgress step={4} total={4} />
       <div className="px-4">
+        <div className="flex items-center gap-2 mb-2 mt-1">
+          <Wallet size={15} color="#F2600C" />
+          <span className="font-display text-muted text-sm tracking-wide">COMO VOCÊ QUER PAGAR?</span>
+        </div>
+        <div className="flex flex-col gap-2 mb-4">
+          <button
+            onClick={() => setPaymentPlan("sinal")}
+            className={`text-left rounded-lg px-4 py-3 border ${
+              paymentPlan === "sinal" ? "bg-orange/10 border-orange" : "bg-stone border-hline"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-[13px] font-semibold text-white">Sinal de 50% agora</span>
+              {paymentPlan === "sinal" && (
+                <span className="w-[18px] h-[18px] rounded-full bg-orange flex items-center justify-center">
+                  <Check size={11} color="#151311" strokeWidth={3} />
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-muted mt-0.5">
+              R$ {sinal} agora · R$ {restante} no embarque
+            </div>
+          </button>
+
+          <button
+            onClick={() => setPaymentPlan("vista")}
+            className={`text-left rounded-lg px-4 py-3 border ${
+              paymentPlan === "vista" ? "bg-orange/10 border-orange" : "bg-stone border-hline"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-[13px] font-semibold text-white">Pagar à vista</span>
+              {paymentPlan === "vista" && (
+                <span className="w-[18px] h-[18px] rounded-full bg-orange flex items-center justify-center">
+                  <Check size={11} color="#151311" strokeWidth={3} />
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-muted mt-0.5">R$ {total} agora · nada no embarque</div>
+          </button>
+        </div>
+
         <div className="rounded-xl p-4 bg-stone border border-hline">
           <div className="font-display text-white text-[15px]">RESUMO DO PEDIDO</div>
           <div className="flex justify-between mt-2">
@@ -121,20 +178,38 @@ export default function BookingPayment() {
             <span className="text-xs text-cream">R$ {total}</span>
           </div>
           <div className="flex justify-between mt-1.5">
-            <span className="text-xs text-muted">Sinal agora (50%)</span>
-            <span className="font-display text-orange text-lg">R$ {sinal}</span>
+            <span className="text-xs text-muted">{paymentPlan === "vista" ? "Pago agora" : "Sinal agora (50%)"}</span>
+            <span className="font-display text-orange text-lg">R$ {valorAgora}</span>
           </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-muted">Restante no embarque (50%)</span>
-            <span className="text-xs text-cream">R$ {restante}</span>
-          </div>
+          {paymentPlan === "sinal" && (
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-muted">Restante no embarque (50%)</span>
+              <span className="text-xs text-cream">R$ {restante}</span>
+            </div>
+          )}
         </div>
 
         <div className="font-display text-muted text-sm tracking-wide mt-4">FORMA DE PAGAMENTO</div>
         <div className="flex flex-col gap-2 mt-2">
           {[
-            { key: "pix", label: "Pix", sub: `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`, icon: Smartphone },
-            { key: "card", label: "Cartão de crédito", sub: `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`, icon: CreditCard },
+            {
+              key: "pix",
+              label: "Pix",
+              sub:
+                paymentPlan === "vista"
+                  ? `Pagamento à vista (R$ ${total})`
+                  : `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`,
+              icon: Smartphone,
+            },
+            {
+              key: "card",
+              label: "Cartão de crédito",
+              sub:
+                paymentPlan === "vista"
+                  ? `Pagamento à vista (R$ ${total})`
+                  : `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`,
+              icon: CreditCard,
+            },
           ].map(({ key, label, sub, icon: Icon }) => {
             const active = method === key;
             return (

@@ -5,6 +5,7 @@ import { Pill } from "../components/UI.jsx";
 import AdminPartners from "./AdminPartners.jsx";
 import AdminGuides from "./AdminGuides.jsx";
 import AdminDailyList from "./AdminDailyList.jsx";
+import AdminPrices from "./AdminPrices.jsx";
 
 const STATUS_OPTIONS = ["confirmado", "concluido", "cancelado"];
 
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
     <div className="flex-1 overflow-y-auto bg-charcoal">
       <div className="flex items-center justify-between px-4 pt-5 pb-3 bg-ink sticky top-0 z-10">
         <div className="font-display text-white text-xl">
-          {{ reservas: "RESERVAS", parceiros: "PARCEIROS", guias: "GUIAS", listadia: "AGENDA" }[tab]}
+          {{ reservas: "RESERVAS", parceiros: "PARCEIROS", guias: "GUIAS", listadia: "AGENDA", precos: "PREÇOS" }[tab]}
         </div>
         <div className="flex items-center gap-3">
           <button onClick={loadBookings} aria-label="Atualizar">
@@ -93,6 +94,7 @@ export default function AdminDashboard() {
           { key: "parceiros", label: "PARCEIROS" },
           { key: "guias", label: "GUIAS" },
           { key: "listadia", label: "AGENDA" },
+          { key: "precos", label: "PREÇOS" },
         ].map((t) => (
           <button
             key={t.key}
@@ -153,6 +155,13 @@ export default function AdminDashboard() {
                     <span className="text-[11px] text-muted">{b.customer_phone}</span>
                   </div>
                 </div>
+                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                  <span className="text-[11px] text-cream font-semibold">R$ {b.total}</span>
+                  <span className="text-[10px] text-muted">
+                    {b.payment_plan === "vista" ? "À vista" : "Sinal 50%"} · pago agora: R${" "}
+                    {b.valor_pago_inicial ?? "-"}
+                  </span>
+                </div>
                 {b.partner_id && (
                   <div className="text-[11px] text-orange mt-1.5">
                     Reserva via parceiro · comissão R$ {Number(b.comissao_valor || 0).toFixed(2)}{" "}
@@ -200,6 +209,7 @@ export default function AdminDashboard() {
       {tab === "parceiros" && <AdminPartners bookings={bookings} />}
       {tab === "guias" && <AdminGuides />}
       {tab === "listadia" && <AdminDailyList bookings={bookings} />}
+      {tab === "precos" && <AdminPrices />}
     </div>
   );
 }

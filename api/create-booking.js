@@ -8,10 +8,16 @@
 // parceiro, padrão 10%).
 //
 // SEGURANÇA: o valor da reserva (total) NUNCA é aceito como veio do
-// navegador — é sempre recalculado aqui a partir do preço oficial do
-// passeio (TOURS, em src/data.js). O limite de quadriciclos por turno
-// também é reconferido aqui no servidor, não só na tela de escolha de data,
-// pra evitar overbooking se duas pessoas reservarem ao mesmo tempo.
+// navegador — é sempre recalculado aqui a partir do preço ATUAL do passeio.
+// O preço vem da tabela "tour_prices" (editável no /admin) e, se não
+// houver nenhum registrado lá, cai no padrão de src/data.js (TOURS). O
+// limite de quadriciclos por turno também é reconferido aqui no servidor,
+// não só na tela de escolha de data, pra evitar overbooking se duas
+// pessoas reservarem ao mesmo tempo.
+//
+// PLANO DE PAGAMENTO: o cliente escolhe entre sinal de 50% (com o
+// restante no embarque) ou pagamento à vista — o valor cobrado agora
+// (valor_pago_inicial) é sempre calculado aqui, nunca aceito do navegador.
 //
 // LISTA TÉCNICA (auditoria): guarda quando o cliente abriu o manual, o
 // termo, e quando marcou o aceite — usado no /admin pra provar, se
@@ -65,6 +71,7 @@ export default async function handler(req, res) {
     manualVistoEm,
     termoVistoEm,
     aceiteEm,
+    paymentPlan,
   } = req.body;
 
   if (!tourId || !time || !customerName || !date) {
@@ -78,11 +85,21 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Passeio inválido" });
   }
 
+  const plan = paymentPlan === "vista" ? "vista" : "sinal";
   const tourName = tour.name;
-  const total = tour.price;
   const maxQuadriciclos = tour.maxQuadriciclos || 5;
 
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  // Busca o preço ATUAL desse passeio (pode ter sido alterado no /admin
+  // desde a última vez que o código foi publicado).
+  const { data: priceRow } = await supabase
+    .from("tour_prices")
+    .select("price")
+    .eq("tour_id", tourId)
+    .single();
+  const total = priceRow?.price ? Number(priceRow.price) : tour.price;
+  const valorPagoInicial = plan === "vista" ? total : Math.round(total * 0.5);
 
   // Reconfere disponibilidade no momento de salvar, e não só na tela
   // anterior — reduz a janela de overbooking quando duas pessoas reservam
@@ -121,7 +138,9 @@ export default async function handler(req, res) {
       customer_name: customerName,
       customer_phone: customerPhone,
       payment_method: method,
+      payment_plan: plan,
       total,
+      valor_pago_inicial: valorPagoInicial,
       status: "confirmado",
       partner_id: partnerId || null,
       comissao_valor: comissaoValor,
