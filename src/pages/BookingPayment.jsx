@@ -55,6 +55,9 @@ export default function BookingPayment() {
           customerPhone: customer.phone,
           method,
           partnerId: sessionStorage.getItem("galavot_partner_id") || null,
+          manualVistoEm: customer.manualVistoEm,
+          termoVistoEm: customer.termoVistoEm,
+          aceiteEm: customer.aceiteEm,
         }),
       });
 
@@ -63,6 +66,15 @@ export default function BookingPayment() {
         setError(data.error || "Esse horário acabou de lotar. Volte e escolha outra data.");
         setLoading(false);
         return;
+      }
+
+      let bookingCode = null;
+      try {
+        const bookingData = await bookingRes.json();
+        bookingCode = bookingData?.booking?.booking_code || null;
+      } catch (parseErr) {
+        // Se não vier o código por algum motivo, a reserva ainda foi feita —
+        // só não teremos o código curto pra mostrar no comprovante.
       }
       // Outros erros (ex: banco fora do ar momentaneamente) não bloqueiam o
       // cliente — a reserva ainda chega pelo WhatsApp na tela de confirmação.
@@ -77,6 +89,7 @@ export default function BookingPayment() {
         sinal,
         restante,
         customer,
+        bookingCode,
       });
 
       // Em produção, redireciona para o checkout do Mercado Pago:

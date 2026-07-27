@@ -20,11 +20,12 @@ export default function BookingConfirmation() {
     );
   }
 
-  const { tourName, time, participants, customer, total, sinal, restante, method } = lastConfirmedBooking;
+  const { tourName, time, participants, customer, total, sinal, restante, method, bookingCode } = lastConfirmedBooking;
   const date = dates[selectedDateIndex];
 
   const whatsappMessage = encodeURIComponent(
     `Olá! Acabei de reservar pelo site:\n\n` +
+      (bookingCode ? `Código da reserva: ${bookingCode}\n` : "") +
       `Passeio: ${tourName}\n` +
       `Data: ${date.sub}\n` +
       `Horário: ${time}\n` +
@@ -59,6 +60,9 @@ export default function BookingConfirmation() {
               <div className="text-[11px] text-muted mt-0.5">
                 {date.sub} · {time} · {participants} pessoa(s)
               </div>
+              {bookingCode && (
+                <div className="text-[11px] text-orange font-semibold mt-1 font-mono">{bookingCode}</div>
+              )}
             </div>
             <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0 bg-ink">
               <span className="text-[8px] text-muted">QR CODE</span>

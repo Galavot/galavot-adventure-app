@@ -9,7 +9,14 @@ export function BookingProvider({ children }) {
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [selectedTime, setSelectedTime] = useState(null);
   const [method, setMethod] = useState(null);
-  const [customer, setCustomer] = useState({ name: "", phone: "", accepted: false });
+  const [customer, setCustomer] = useState({
+    name: "",
+    phone: "",
+    accepted: false,
+    manualVistoEm: null,
+    termoVistoEm: null,
+    aceiteEm: null,
+  });
   const [lastConfirmedBooking, setLastConfirmedBooking] = useState(null);
 
   const resetBookingFlow = () => {
@@ -17,7 +24,7 @@ export function BookingProvider({ children }) {
     setSelectedDateIndex(0);
     setSelectedTime(null);
     setMethod(null);
-    setCustomer({ name: "", phone: "", accepted: false });
+    setCustomer({ name: "", phone: "", accepted: false, manualVistoEm: null, termoVistoEm: null, aceiteEm: null });
   };
 
   const value = {

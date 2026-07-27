@@ -21,8 +21,19 @@ export default function BookingCustomer() {
 
   const handleOpenDoc = (doc) => {
     setOpenDoc(doc);
-    if (doc === "manual") setViewedManual(true);
-    if (doc === "termo") setViewedTermo(true);
+    const now = new Date().toISOString();
+    if (doc === "manual" && !viewedManual) {
+      setViewedManual(true);
+      setCustomer({ ...customer, manualVistoEm: now });
+    }
+    if (doc === "termo" && !viewedTermo) {
+      setViewedTermo(true);
+      setCustomer({ ...customer, termoVistoEm: now });
+    }
+  };
+
+  const handleAcceptChange = (checked) => {
+    setCustomer({ ...customer, accepted: checked, aceiteEm: checked ? new Date().toISOString() : null });
   };
 
   const handleContinue = () => {
@@ -116,7 +127,7 @@ export default function BookingCustomer() {
             type="checkbox"
             checked={customer.accepted}
             disabled={!docsViewed}
-            onChange={(e) => setCustomer({ ...customer, accepted: e.target.checked })}
+            onChange={(e) => handleAcceptChange(e.target.checked)}
             className="mt-0.5 accent-orange"
           />
           <span className="text-[12px] text-cream leading-relaxed">

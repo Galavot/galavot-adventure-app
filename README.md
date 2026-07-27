@@ -168,6 +168,44 @@ alter table partners enable row level security;
 alter table login_attempts enable row level security;
 ```
 
+### Lista Técnica (auditoria) + Lista do Dia pros guias
+
+Duas novidades que dependem de mais SQL no Supabase:
+
+**1. Lista Técnica:** guarda, pra cada reserva, quando o cliente abriu o manual,
+o termo, e quando confirmou o aceite — visível na aba RESERVAS do `/admin`.
+Serve como registro técnico caso um dia seja preciso comprovar que o fluxo foi
+seguido antes do pagamento (não somos advogados — se isso tem valor
+probatório específico pro seu caso, é bom confirmar com um advogado, mas ter
+o registro é sempre melhor do que não ter).
+
+**2. Lista do Dia:** nova aba no `/admin` que mostra as reservas de hoje
+separadas por turno (Matinal/Vespertino), com um botão que abre o WhatsApp já
+com a lista pronta pra mandar pro guia — só falta 1 toque em "Enviar". Pra
+isso, cadastre os guias na aba GUIAS (nome + WhatsApp + quais turnos cada um
+recebe).
+
+Rode este SQL no **SQL Editor** do Supabase:
+
+```sql
+alter table bookings add column booking_code text;
+alter table bookings add column manual_visto_em timestamptz;
+alter table bookings add column termo_visto_em timestamptz;
+alter table bookings add column aceite_em timestamptz;
+alter table bookings add column ip text;
+
+create table guides (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  whatsapp text not null,
+  recebe_matinal boolean default true,
+  recebe_vespertino boolean default true,
+  ativo boolean default true,
+  created_at timestamptz default now()
+);
+alter table guides enable row level security;
+```
+
 **Como cadastrar um parceiro:** entre em `/admin` → aba **PARCEIROS** →
 **+ Novo Parceiro**. Você escolhe o nome, código de acesso (o parceiro vai
 usar isso pra logar) e uma senha. O parceiro acessa em `/parceiro` com

@@ -13,6 +13,13 @@
 // também é reconferido aqui no servidor, não só na tela de escolha de data,
 // pra evitar overbooking se duas pessoas reservarem ao mesmo tempo.
 //
+// LISTA TÉCNICA (auditoria): guarda quando o cliente abriu o manual, o
+// termo, e quando marcou o aceite — usado no /admin pra provar, se
+// necessário, que o fluxo foi seguido antes do pagamento. O IP vem do
+// próprio servidor (não confia no que o navegador diz), e cada reserva
+// ganha um código curto (ex: GLV-4821) pra identificar fácil na lista do
+// guia e num eventual comprovante.
+//
 // Pré-requisitos (ver README):
 // - Criar projeto gratuito em https://supabase.com
 // - Rodar o SQL de criação da tabela "bookings" (está no README)
@@ -20,6 +27,17 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
+
+function getClientIp(req) {
+  const fwd = req.headers["x-forwarded-for"];
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.socket?.remoteAddress || "desconhecido";
+}
+
+function generateBookingCode() {
+  const n = Math.floor(1000 + Math.random() * 9000);
+  return `GLV-${n}`;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -35,7 +53,19 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourId, date, time, participants, customerName, customerPhone, method, partnerId } = req.body;
+  const {
+    tourId,
+    date,
+    time,
+    participants,
+    customerName,
+    customerPhone,
+    method,
+    partnerId,
+    manualVistoEm,
+    termoVistoEm,
+    aceiteEm,
+  } = req.body;
 
   if (!tourId || !time || !customerName || !date) {
     return res.status(400).json({ error: "Dados da reserva incompletos" });
@@ -82,6 +112,7 @@ export default async function handler(req, res) {
   const { data, error } = await supabase
     .from("bookings")
     .insert({
+      booking_code: generateBookingCode(),
       tour_id: tourId,
       tour_name: tourName,
       booking_date: date,
@@ -95,6 +126,10 @@ export default async function handler(req, res) {
       partner_id: partnerId || null,
       comissao_valor: comissaoValor,
       comissao_paga: false,
+      manual_visto_em: manualVistoEm || null,
+      termo_visto_em: termoVistoEm || null,
+      aceite_em: aceiteEm || null,
+      ip: getClientIp(req),
     })
     .select()
     .single();

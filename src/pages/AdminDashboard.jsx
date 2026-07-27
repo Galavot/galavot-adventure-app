@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Clock, Users, Phone } from "lucide-react";
+import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck } from "lucide-react";
 import { Pill } from "../components/UI.jsx";
 import AdminPartners from "./AdminPartners.jsx";
+import AdminGuides from "./AdminGuides.jsx";
+import AdminDailyList from "./AdminDailyList.jsx";
 
 const STATUS_OPTIONS = ["confirmado", "concluido", "cancelado"];
 
@@ -72,7 +74,9 @@ export default function AdminDashboard() {
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal">
       <div className="flex items-center justify-between px-4 pt-5 pb-3 bg-ink sticky top-0 z-10">
-        <div className="font-display text-white text-xl">{tab === "reservas" ? "RESERVAS" : "PARCEIROS"}</div>
+        <div className="font-display text-white text-xl">
+          {{ reservas: "RESERVAS", parceiros: "PARCEIROS", guias: "GUIAS", listadia: "LISTA DO DIA" }[tab]}
+        </div>
         <div className="flex items-center gap-3">
           <button onClick={loadBookings} aria-label="Atualizar">
             <RefreshCw size={18} color="#B7AFA2" />
@@ -83,15 +87,17 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="flex gap-2 px-4 pt-3">
+      <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
         {[
           { key: "reservas", label: "RESERVAS" },
           { key: "parceiros", label: "PARCEIROS" },
+          { key: "guias", label: "GUIAS" },
+          { key: "listadia", label: "LISTA DO DIA" },
         ].map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 py-2 rounded-lg text-[12px] font-semibold ${
+            className={`flex-shrink-0 px-4 py-2 rounded-lg text-[12px] font-semibold ${
               tab === t.key ? "bg-orange text-ink" : "bg-stone text-muted border border-hline"
             }`}
           >
@@ -153,6 +159,27 @@ export default function AdminDashboard() {
                     {b.comissao_paga ? "(paga)" : "(pendente)"}
                   </div>
                 )}
+
+                <div className="rounded-lg px-3 py-2 mt-3 bg-ink border border-hline">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <ShieldCheck size={12} color="#F2600C" />
+                    <span className="text-[10px] font-bold text-muted tracking-wide">
+                      LISTA TÉCNICA {b.booking_code ? `· ${b.booking_code}` : ""}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+                    <span style={{ color: b.manual_visto_em ? "#22c55e" : "#ef4444" }}>
+                      {b.manual_visto_em ? "✓ Manual visto" : "✗ Manual não visto"}
+                    </span>
+                    <span style={{ color: b.termo_visto_em ? "#22c55e" : "#ef4444" }}>
+                      {b.termo_visto_em ? "✓ Termo visto" : "✗ Termo não visto"}
+                    </span>
+                    <span style={{ color: b.aceite_em ? "#22c55e" : "#ef4444" }}>
+                      {b.aceite_em ? `✓ Aceito ${new Date(b.aceite_em).toLocaleString("pt-BR")}` : "✗ Sem aceite"}
+                    </span>
+                  </div>
+                  {b.ip && <div className="text-[9px] text-muted mt-1">IP: {b.ip}</div>}
+                </div>
                 <div className="flex gap-2 mt-3">
                   {STATUS_OPTIONS.filter((s) => s !== b.status).map((s) => (
                     <button
@@ -171,6 +198,8 @@ export default function AdminDashboard() {
       )}
 
       {tab === "parceiros" && <AdminPartners bookings={bookings} />}
+      {tab === "guias" && <AdminGuides />}
+      {tab === "listadia" && <AdminDailyList bookings={bookings} />}
     </div>
   );
 }
