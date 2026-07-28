@@ -17,7 +17,7 @@ export function PricesProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/get-prices")
+    fetch("/api/admin-prices")
       .then((r) => r.json())
       .then((data) => {
         if (data?.prices) setPrices({ ...defaults, ...data.prices });
