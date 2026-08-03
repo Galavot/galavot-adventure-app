@@ -55,7 +55,7 @@ export default function BookingCustomer() {
             placeholder="Como está no documento"
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
-          {touched && !nameValid && <p className="text-[11px] text-orange mt-1">Informe seu nome completo.</p>}
+          {touched && !nameValid && <p className="text-[11px] text-[#ef4444] mt-1">Informe seu nome completo.</p>}
         </div>
 
         <div>
@@ -67,7 +67,7 @@ export default function BookingCustomer() {
             placeholder="(27) 9 9999-9999"
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
-          {touched && !phoneValid && <p className="text-[11px] text-orange mt-1">Informe um WhatsApp válido.</p>}
+          {touched && !phoneValid && <p className="text-[11px] text-[#ef4444] mt-1">Informe um WhatsApp válido.</p>}
         </div>
 
         <div className="mt-2">
@@ -112,7 +112,7 @@ export default function BookingCustomer() {
             </button>
           </div>
           {touched && !docsViewed && (
-            <p className="text-[11px] text-orange mt-2">
+            <p className="text-[11px] text-[#ef4444] mt-2">
               Abra e leia os dois documentos acima antes de continuar.
             </p>
           )}
@@ -136,7 +136,7 @@ export default function BookingCustomer() {
           </span>
         </label>
         {touched && docsViewed && !customer.accepted && (
-          <p className="text-[11px] text-orange -mt-2">É necessário aceitar o termo para continuar.</p>
+          <p className="text-[11px] text-[#ef4444] -mt-2">É necessário aceitar o termo para continuar.</p>
         )}
       </div>
       {openDoc === "manual" && (

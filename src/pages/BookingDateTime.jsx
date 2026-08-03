@@ -120,7 +120,7 @@ export default function BookingDateTime() {
               <span className="text-[12px] text-cream">
                 Vagas disponíveis nesse dia ({tour.maxQuadriciclos} quadriciclos/turno)
               </span>
-              <span className={`font-display text-base ${esgotado ? "text-orange" : "text-white"}`}>
+              <span className={`font-display text-base ${esgotado ? "text-[#ef4444]" : "text-white"}`}>
                 {esgotado ? "ESGOTADO" : `${selectedAvailable} de ${tour.maxQuadriciclos}`}
               </span>
             </>
@@ -128,8 +128,8 @@ export default function BookingDateTime() {
         </div>
 
         {esgotado && (
-          <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-3 bg-stone border border-orange">
-            <AlertCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-3 bg-stone border border-[#ef4444]">
+            <AlertCircle size={16} color="#ef4444" className="flex-shrink-0 mt-0.5" />
             <span className="text-[11px] text-cream leading-relaxed">
               Esse dia já está com todas as vagas do turno preenchidas. Escolha outra data acima (as com selo
               vermelho também estão lotadas).

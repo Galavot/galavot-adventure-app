@@ -159,7 +159,7 @@ export default function AdminDailyList({ bookings }) {
               </div>
 
               {!loading && guidesForTurno.length === 0 && (
-                <p className="text-[11px] text-orange mt-3">
+                <p className="text-[11px] text-[#ef4444] mt-3">
                   Nenhum guia ativo cadastrado pra esse turno — cadastre na aba GUIAS.
                 </p>
               )}

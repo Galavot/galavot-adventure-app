@@ -170,7 +170,7 @@ export default function AdminPartners({ bookings }) {
         </form>
       )}
 
-      {error && <p className="text-orange text-sm text-center mt-2">{error}</p>}
+      {error && <p className="text-[#ef4444] text-sm text-center mt-2">{error}</p>}
       {loading && <p className="text-muted text-sm text-center mt-4">Carregando...</p>}
       {!loading && partners.length === 0 && (
         <p className="text-muted text-sm text-center mt-4">Nenhum parceiro cadastrado ainda.</p>

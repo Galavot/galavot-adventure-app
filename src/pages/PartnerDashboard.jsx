@@ -101,7 +101,7 @@ export default function PartnerDashboard() {
       <div className="px-4 py-4 flex flex-col gap-3">
         <div className="font-display text-muted text-sm tracking-wide">MINHAS RESERVAS</div>
         {loading && <p className="text-muted text-sm text-center mt-4">Carregando...</p>}
-        {error && <p className="text-orange text-sm text-center mt-4">{error}</p>}
+        {error && <p className="text-[#ef4444] text-sm text-center mt-4">{error}</p>}
         {!loading && bookings.length === 0 && (
           <p className="text-muted text-sm text-center mt-4">Você ainda não fez nenhuma reserva.</p>
         )}

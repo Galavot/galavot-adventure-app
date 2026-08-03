@@ -231,8 +231,8 @@ export default function BookingPayment() {
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-4 bg-stone border border-orange">
-            <AlertCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-4 bg-stone border border-[#ef4444]">
+            <AlertCircle size={16} color="#ef4444" className="flex-shrink-0 mt-0.5" />
             <span className="text-[11px] text-cream leading-relaxed">{error}</span>
           </div>
         )}

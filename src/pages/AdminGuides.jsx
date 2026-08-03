@@ -122,7 +122,7 @@ export default function AdminGuides() {
         </form>
       )}
 
-      {error && <p className="text-orange text-sm text-center mt-2">{error}</p>}
+      {error && <p className="text-[#ef4444] text-sm text-center mt-2">{error}</p>}
       {loading && <p className="text-muted text-sm text-center mt-8">Carregando...</p>}
       {!loading && guides.length === 0 && (
         <p className="text-muted text-sm text-center mt-8">Nenhum guia cadastrado ainda.</p>

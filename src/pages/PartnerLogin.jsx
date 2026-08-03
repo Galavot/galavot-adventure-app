@@ -59,7 +59,7 @@ export default function PartnerLogin() {
             className="bg-transparent outline-none text-white flex-1 placeholder:text-muted"
           />
         </div>
-        {error && <p className="text-[12px] text-orange">{error}</p>}
+        {error && <p className="text-[12px] text-[#ef4444]">{error}</p>}
         <PrimaryButton type="submit" disabled={loading || !codigo || !senha}>
           {loading ? "ENTRANDO..." : "ENTRAR"}
         </PrimaryButton>
