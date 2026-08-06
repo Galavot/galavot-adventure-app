@@ -95,7 +95,7 @@ export const CONTACT = {
   // sozinho no rodapé do Perfil assim que esse campo deixar de estar vazio.
   cnpj: "",
   meetingPoint: {
-    address: "Estr. Rota da Ferradura - Guarapari, ES, 29227-640",
+    address: "Rota da Ferradura (Segunda Entrada) - Guarapari, ES, 29227-640",
     lat: -20.642439,
     lng: -40.562542,
     mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=-20.642439,-40.562542",
