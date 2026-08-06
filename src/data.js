@@ -96,9 +96,9 @@ export const CONTACT = {
   cnpj: "",
   meetingPoint: {
     address: "Estr. Rota da Ferradura - Guarapari, ES, 29227-640",
-    lat: -20.643258,
-    lng: -40.559039,
-    mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=-20.643258,-40.559039",
+    lat: -20.642439,
+    lng: -40.562542,
+    mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=-20.642439,-40.562542",
   },
 };
 
