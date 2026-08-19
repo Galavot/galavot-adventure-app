@@ -20,14 +20,15 @@ export default function BookingConfirmation() {
     );
   }
 
-  const { tourName, time, participants, customer, total, sinal, restante, valorAgora, paymentPlan, method, bookingCode } =
-    lastConfirmedBooking;
+  const { tourName, time, participants, customer, total, method, bookingCode } = lastConfirmedBooking;
   const date = dates[selectedDateIndex];
 
-  const pagamentoTexto =
-    paymentPlan === "vista"
-      ? `Pagamento à vista: R$ ${total} (pago)`
-      : `Sinal de R$ ${sinal} pago (50%), restante R$ ${restante} no embarque`;
+  const METHOD_LABELS = {
+    pix: "Pix",
+    credito: "Cartão de Crédito",
+    debito: "Cartão de Débito",
+    transferencia: "Transferência Bancária",
+  };
 
   const whatsappMessage = encodeURIComponent(
     `Olá! Acabei de reservar pelo site:\n\n` +
@@ -38,7 +39,7 @@ export default function BookingConfirmation() {
       `Pessoas: ${participants}\n` +
       `Nome: ${customer?.name || "-"}\n` +
       `WhatsApp: ${customer?.phone || "-"}\n` +
-      `Pagamento: ${method === "pix" ? "Pix" : "Cartão"} — ${pagamentoTexto}\n\n` +
+      `Pagamento: ${METHOD_LABELS[method] || method} — Pagamento à vista: R$ ${total} (pago)\n\n` +
       `Ponto de encontro: ${CONTACT.meetingPoint.address}\n${CONTACT.meetingPoint.mapsUrl}\n\n` +
       `Aguardo confirmação!`
   );
