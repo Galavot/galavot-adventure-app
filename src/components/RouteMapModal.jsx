@@ -27,17 +27,37 @@ export default function RouteMapModal({ stops, onClose }) {
       aria-label="Mapa da rota"
     >
       <div
-        className="flex items-center justify-between px-4 py-3 bg-charcoal border-b border-hline shrink-0"
+        className="relative bg-charcoal border-b border-hline shrink-0"
+        style={{ height: 88 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="font-display text-white text-[17px] tracking-wide">MAPA DA ROTA</span>
+        <span
+          className="absolute left-4 top-[14px] font-display text-white text-[17px] tracking-wide"
+          style={{ maxWidth: "calc(100% - 130px)" }}
+        >
+          MAPA DA ROTA
+        </span>
         <button
           onClick={onClose}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
+          className="absolute right-4 top-[14px] w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
           aria-label="Fechar"
         >
           <X size={18} color="#fff" />
         </button>
+        <span
+          className="absolute right-4 text-[10px] italic font-semibold text-orange whitespace-nowrap"
+          style={{ top: 58 }}
+        >
+          Toque no X pra voltar
+        </span>
+        <svg width="120" height="88" viewBox="0 0 120 88" className="absolute right-0 top-0 pointer-events-none">
+          <defs>
+            <marker id="map-modal-arrow" markerWidth="9" markerHeight="9" refX="2.6" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#F2600C" />
+            </marker>
+          </defs>
+          <path d="M48,60 Q58,50 73,45" fill="none" stroke="#F2600C" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#map-modal-arrow)" />
+        </svg>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4" onClick={(e) => e.stopPropagation()}>

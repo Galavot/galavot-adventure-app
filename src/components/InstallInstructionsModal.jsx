@@ -24,11 +24,28 @@ export default function InstallInstructionsModal({ platform, onClose }) {
         className="w-full sm:max-w-sm bg-charcoal rounded-t-2xl sm:rounded-2xl border border-hline animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <div className="font-display text-white text-xl">INSTALAR O APP</div>
-          <button onClick={onClose} aria-label="Fechar" className="w-8 h-8 rounded-full flex items-center justify-center bg-stone">
+        <div className="relative px-5 pt-5 pb-8" style={{ height: 88 }}>
+          <div className="font-display text-white text-xl absolute left-5 top-5" style={{ maxWidth: "calc(100% - 130px)" }}>
+            INSTALAR O APP
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            className="absolute right-5 top-4 w-8 h-8 rounded-full flex items-center justify-center bg-stone"
+          >
             <X size={16} color="#fff" />
           </button>
+          <span className="absolute right-5 text-[10px] italic font-semibold text-orange whitespace-nowrap" style={{ top: 58 }}>
+            Toque no X pra voltar
+          </span>
+          <svg width="120" height="88" viewBox="0 0 120 88" className="absolute right-0 top-0 pointer-events-none">
+            <defs>
+              <marker id="install-modal-arrow" markerWidth="9" markerHeight="9" refX="2.6" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M0,0 L9,4.5 L0,9 Z" fill="#F2600C" />
+              </marker>
+            </defs>
+            <path d="M50,60 Q60,50 73,43" fill="none" stroke="#F2600C" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#install-modal-arrow)" />
+          </svg>
         </div>
         <div className="px-5 pb-6 flex flex-col gap-4">
           {isIOS ? (

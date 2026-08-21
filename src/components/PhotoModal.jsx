@@ -22,13 +22,28 @@ export default function PhotoModal({ src, alt, onClose }) {
       aria-modal="true"
       aria-label={alt || "Foto ampliada"}
     >
-      <button
-        onClick={onClose}
-        className="absolute top-5 right-5 w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
-        aria-label="Fechar"
-      >
-        <X size={18} color="#fff" />
-      </button>
+      <div className="absolute top-5 right-5" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
+          aria-label="Fechar"
+        >
+          <X size={18} color="#fff" />
+        </button>
+        <span
+          className="absolute right-11 top-2.5 text-[10px] italic font-semibold text-orange whitespace-nowrap"
+        >
+          Toque no X pra voltar
+        </span>
+        <svg width="60" height="40" viewBox="0 0 60 40" className="absolute right-9 top-0 pointer-events-none">
+          <defs>
+            <marker id="photo-modal-arrow" markerWidth="9" markerHeight="9" refX="2.6" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="#F2600C" />
+            </marker>
+          </defs>
+          <path d="M4,4 Q20,4 44,17" fill="none" stroke="#F2600C" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#photo-modal-arrow)" />
+        </svg>
+      </div>
       <img
         src={src}
         alt={alt || ""}
