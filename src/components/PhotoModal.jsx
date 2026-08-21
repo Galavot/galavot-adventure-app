@@ -35,13 +35,20 @@ export default function PhotoModal({ src, alt, onClose }) {
         >
           Toque no X pra voltar
         </span>
-        <svg width="60" height="40" viewBox="0 0 60 40" className="absolute right-9 top-0 pointer-events-none">
+        <svg width="170" height="46" viewBox="0 0 170 46" style={{ position: "absolute", right: 0, top: -10 }} className="pointer-events-none">
           <defs>
             <marker id="photo-modal-arrow" markerWidth="9" markerHeight="9" refX="2.6" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
               <path d="M0,0 L9,4.5 L0,9 Z" fill="#F2600C" />
             </marker>
           </defs>
-          <path d="M4,4 Q20,4 44,17" fill="none" stroke="#F2600C" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#photo-modal-arrow)" />
+          <path
+            d="M6,12 C 60,-10 110,-10 150,26"
+            fill="none"
+            stroke="#F2600C"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            markerEnd="url(#photo-modal-arrow)"
+          />
         </svg>
       </div>
       <img
