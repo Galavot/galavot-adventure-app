@@ -6,7 +6,7 @@ import PhotoModal from "../components/PhotoModal.jsx";
 import HowItWorksModal from "../components/HowItWorksModal.jsx";
 import Testimonials from "../components/Testimonials.jsx";
 import Reveal from "../components/Reveal.jsx";
-import { TOURS, CONTACT } from "../data.js";
+import { TOURS, CONTACT, SITE_URL } from "../data.js";
 import { usePrices } from "../context/PricesContext.jsx";
 
 export default function Home() {
@@ -20,7 +20,7 @@ export default function Home() {
     const shareData = {
       title: "Galavot Adventure",
       text: "Reserve seu passeio de quadriciclo em Guarapari pelo app da Galavot Adventure!",
-      url: window.location.origin,
+      url: SITE_URL,
     };
     if (navigator.share) {
       try {

@@ -79,6 +79,11 @@ export function getUpcomingDates(days = 6) {
   return result;
 }
 
+// Domínio oficial — usado em links de compartilhamento, pra sempre indicar o
+// endereço definitivo mesmo se a pessoa estiver navegando pelo link antigo
+// da Vercel (galavot-adventure-app-7nbs.vercel.app) ou por um bookmark velho.
+export const SITE_URL = "https://galavotadventure.com.br";
+
 export const CONTACT = {
   name: "Jorge Galavot",
   phone: "(27) 99992-7056",
