@@ -42,7 +42,7 @@ export default function PhotoModal({ src, alt, onClose }) {
             </marker>
           </defs>
           <path
-            d="M6,12 C 60,-10 110,-10 150,26"
+            d="M6,14 C 55,-6 95,4 125,34"
             fill="none"
             stroke="#F2600C"
             strokeWidth="1.6"

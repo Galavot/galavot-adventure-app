@@ -56,7 +56,7 @@ export default function RouteMapModal({ stops, onClose }) {
               <path d="M0,0 L9,4.5 L0,9 Z" fill="#F2600C" />
             </marker>
           </defs>
-          <path d="M48,60 Q58,50 73,45" fill="none" stroke="#F2600C" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#map-modal-arrow)" />
+          <path d="M46,62 Q54,54 64,50" fill="none" stroke="#F2600C" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#map-modal-arrow)" />
         </svg>
       </div>
 

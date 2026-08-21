@@ -63,7 +63,7 @@ export default function DocumentModal({ src, alt, title, onClose }) {
             </marker>
           </defs>
           <path
-            d="M48,60 Q58,50 73,45"
+            d="M46,62 Q54,54 64,50"
             fill="none"
             stroke="#F2600C"
             strokeWidth="1.6"
