@@ -38,14 +38,14 @@ export default function DocumentModal({ src, alt, title, onClose }) {
 
         <button
           onClick={onClose}
-          className="absolute right-4 top-[14px] w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
+          className="absolute right-5 top-4 w-8 h-8 rounded-full flex items-center justify-center bg-stone border border-hline"
           aria-label="Fechar"
         >
-          <X size={18} color="#fff" />
+          <X size={16} color="#fff" />
         </button>
 
         <span
-          className="absolute right-4 text-[10px] italic font-semibold text-orange whitespace-nowrap"
+          className="absolute right-5 text-[10px] italic font-semibold text-orange whitespace-nowrap"
           style={{ top: 58 }}
         >
           Após a leitura, clique no X
@@ -63,7 +63,7 @@ export default function DocumentModal({ src, alt, title, onClose }) {
             </marker>
           </defs>
           <path
-            d="M46,62 Q54,54 64,50"
+            d="M50,60 Q60,50 74,44"
             fill="none"
             stroke="#F2600C"
             strokeWidth="1.6"

@@ -22,27 +22,32 @@ export default function PhotoModal({ src, alt, onClose }) {
       aria-modal="true"
       aria-label={alt || "Foto ampliada"}
     >
-      <div className="absolute top-5 right-5" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="absolute top-2 right-2"
+        style={{ width: 120, height: 88 }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-stone border border-hline"
+          className="absolute right-5 top-4 w-8 h-8 rounded-full flex items-center justify-center bg-stone border border-hline"
           aria-label="Fechar"
         >
-          <X size={18} color="#fff" />
+          <X size={16} color="#fff" />
         </button>
         <span
-          className="absolute right-11 top-2.5 text-[10px] italic font-semibold text-orange whitespace-nowrap"
+          className="absolute right-5 text-[10px] italic font-semibold text-orange whitespace-nowrap"
+          style={{ top: 58 }}
         >
           Toque no X pra voltar
         </span>
-        <svg width="170" height="46" viewBox="0 0 170 46" style={{ position: "absolute", right: 0, top: -10 }} className="pointer-events-none">
+        <svg width="120" height="88" viewBox="0 0 120 88" className="absolute right-0 top-0 pointer-events-none">
           <defs>
             <marker id="photo-modal-arrow" markerWidth="9" markerHeight="9" refX="2.6" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
               <path d="M0,0 L9,4.5 L0,9 Z" fill="#F2600C" />
             </marker>
           </defs>
           <path
-            d="M6,14 C 55,-6 95,4 125,34"
+            d="M50,60 Q60,50 74,44"
             fill="none"
             stroke="#F2600C"
             strokeWidth="1.6"
