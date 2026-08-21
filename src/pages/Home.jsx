@@ -60,8 +60,24 @@ export default function Home() {
               "linear-gradient(170deg, rgba(15,14,12,0.95) 25%, rgba(21,19,17,0.85) 60%, rgba(44,40,35,0.65) 100%)",
           }}
         />
-        <div className="relative">
-          <Logo size={64} />
+        <div className="relative flex items-center gap-3.5">
+          <Logo size={84} />
+          <div>
+            <div
+              className="font-display text-white"
+              style={{ fontSize: 15, letterSpacing: 0.4, lineHeight: 1.15, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
+            >
+              GALAVOT ADVENTURE
+            </div>
+            <div className="text-muted" style={{ fontSize: 10, marginTop: 3, textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
+              {CONTACT.city}
+            </div>
+            {CONTACT.cnpj && (
+              <div className="text-muted" style={{ fontSize: 9, marginTop: 1, textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
+                CNPJ {CONTACT.cnpj}
+              </div>
+            )}
+          </div>
         </div>
         <div className="relative mt-7">
           <div className="font-display text-white leading-[1.02]" style={{ fontSize: 36, textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>
