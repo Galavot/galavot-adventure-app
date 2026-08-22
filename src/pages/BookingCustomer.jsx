@@ -16,7 +16,7 @@ export default function BookingCustomer() {
 
   const nameValid = customer.name.trim().length >= 3;
   const phoneValid = customer.phone.replace(/\D/g, "").length >= 10;
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
+  const emailValid = customer.email.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const docsViewed = viewedManual && viewedTermo;
   const canContinue = nameValid && phoneValid && emailValid && customer.accepted && docsViewed;
 
@@ -72,7 +72,7 @@ export default function BookingCustomer() {
         </div>
 
         <div>
-          <label className="text-[11px] font-semibold text-muted">E-MAIL</label>
+          <label className="text-[11px] font-semibold text-muted">E-MAIL (OPCIONAL)</label>
           <input
             type="email"
             value={customer.email}
@@ -81,9 +81,11 @@ export default function BookingCustomer() {
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
           <p className="text-[10px] text-muted mt-1">
-            É pra cá que mandamos o código da sua reserva depois do pagamento.
+            Se preencher, mandamos o código da sua reserva por e-mail também. Sem problema deixar em branco.
           </p>
-          {touched && !emailValid && <p className="text-[11px] text-[#ef4444] mt-1">Informe um e-mail válido.</p>}
+          {touched && !emailValid && (
+            <p className="text-[11px] text-[#ef4444] mt-1">Esse e-mail não parece válido — corrige ou apaga o campo.</p>
+          )}
         </div>
 
         <div className="mt-2">
