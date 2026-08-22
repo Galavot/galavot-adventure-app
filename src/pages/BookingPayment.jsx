@@ -216,8 +216,9 @@ export default function BookingPayment() {
         <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-4 bg-stone border border-hline">
           <MessageCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
           <span className="text-[11px] text-cream leading-relaxed">
-            Você vai ser redirecionado pro Mercado Pago pra pagar com segurança. Depois de pagar, você recebe pelo
-            WhatsApp um código de reserva — é ele que autoriza seu embarque no dia do passeio.
+            Você vai ser redirecionado pro Mercado Pago pra pagar com segurança. Depois de pagar, o código da sua
+            reserva aparece na tela — se preencheu o e-mail, também chega por lá. É esse código que autoriza seu
+            embarque no dia do passeio.
           </span>
         </div>
       </div>

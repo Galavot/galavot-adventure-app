@@ -159,7 +159,7 @@ export default function PaymentReturn() {
           </div>
           <div className="text-[11px] text-orange font-semibold mt-1 font-mono">{booking_code}</div>
           <div className="text-[9px] text-muted mt-0.5 max-w-[220px]">
-            Esse é o seu código de embarque — também chega pelo WhatsApp
+            Esse é o seu código de embarque — se preencheu o e-mail, também chega por lá
           </div>
           <div className="h-px my-3 bg-hline" />
           <div className="flex items-center gap-2">
