@@ -9,7 +9,7 @@ export function BookingProvider({ children }) {
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [selectedTime, setSelectedTime] = useState(null);
   const [method, setMethod] = useState(null);
-  const [paymentPlan] = useState("vista"); // pagamento sempre a vista agora
+  const [paymentPlan, setPaymentPlan] = useState("sinal"); // "sinal" | "vista"
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
@@ -25,7 +25,7 @@ export function BookingProvider({ children }) {
     setSelectedDateIndex(0);
     setSelectedTime(null);
     setMethod(null);
-    // paymentPlan fixo em "vista" -- sem selecao de plano
+    setPaymentPlan("sinal");
     setCustomer({ name: "", phone: "", accepted: false, manualVistoEm: null, termoVistoEm: null, aceiteEm: null });
   };
 
@@ -40,6 +40,7 @@ export function BookingProvider({ children }) {
     method,
     setMethod,
     paymentPlan,
+    setPaymentPlan,
     customer,
     setCustomer,
     lastConfirmedBooking,

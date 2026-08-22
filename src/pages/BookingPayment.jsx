@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CreditCard, Smartphone, AlertCircle, Landmark, Wallet } from "lucide-react";
+import { CreditCard, Smartphone, AlertCircle, Landmark, Wallet, Check } from "lucide-react";
 import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import { TOURS } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -26,13 +26,17 @@ export default function BookingPayment() {
     method,
     setMethod,
     paymentPlan,
+    setPaymentPlan,
     customer,
     setLastConfirmedBooking,
   } = useBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const total = prices[tour.id] ?? tour.price; // preço é por quadriciclo, não por pessoa — pago à vista
+  const total = prices[tour.id] ?? tour.price; // preço é por quadriciclo, não por pessoa
+  const sinal = Math.round(total * 0.5);
+  const restante = total - sinal;
+  const valorAgora = paymentPlan === "vista" ? total : sinal;
 
   const handleConfirm = async () => {
     setError(null);
@@ -103,9 +107,9 @@ export default function BookingPayment() {
         method,
         paymentPlan,
         total,
-        sinal: total,
-        restante: 0,
-        valorAgora: total,
+        sinal,
+        restante,
+        valorAgora,
         customer,
         bookingCode,
       });
@@ -127,25 +131,79 @@ export default function BookingPayment() {
       <TopBar title="PAGAMENTO" showBack />
       <TrailProgress step={4} total={4} />
       <div className="px-4">
-        <div className="rounded-xl p-4 bg-stone border border-hline mt-1">
+        <div className="flex items-center gap-2 mb-2 mt-1">
+          <Wallet size={15} color="#F2600C" />
+          <span className="font-display text-muted text-sm tracking-wide">COMO VOCÊ QUER PAGAR?</span>
+        </div>
+        <div className="flex flex-col gap-2 mb-4">
+          <button
+            onClick={() => setPaymentPlan("sinal")}
+            className={`text-left rounded-lg px-4 py-3 border ${
+              paymentPlan === "sinal" ? "bg-orange/10 border-orange" : "bg-stone border-hline"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-[13px] font-semibold text-white">Sinal de 50% agora</span>
+              {paymentPlan === "sinal" && (
+                <span className="w-[18px] h-[18px] rounded-full bg-orange flex items-center justify-center">
+                  <Check size={11} color="#151311" strokeWidth={3} />
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-muted mt-0.5">
+              R$ {sinal} agora · R$ {restante} no embarque
+            </div>
+          </button>
+
+          <button
+            onClick={() => setPaymentPlan("vista")}
+            className={`text-left rounded-lg px-4 py-3 border ${
+              paymentPlan === "vista" ? "bg-orange/10 border-orange" : "bg-stone border-hline"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-[13px] font-semibold text-white">Pagar à vista</span>
+              {paymentPlan === "vista" && (
+                <span className="w-[18px] h-[18px] rounded-full bg-orange flex items-center justify-center">
+                  <Check size={11} color="#151311" strokeWidth={3} />
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-muted mt-0.5">R$ {total} agora · nada no embarque</div>
+          </button>
+        </div>
+
+        <div className="rounded-xl p-4 bg-stone border border-hline">
           <div className="font-display text-white text-[15px]">RESUMO DO PEDIDO</div>
           <div className="flex justify-between mt-2">
             <span className="text-xs text-muted">{tour.name}</span>
             <span className="text-xs text-cream">{selectedTime} · {participants} pessoa(s)</span>
           </div>
           <div className="h-px my-3 bg-hline" />
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-muted flex items-center gap-1.5">
-              <Wallet size={13} color="#B7AFA2" /> Total do passeio (pago agora)
-            </span>
-            <span className="font-display text-orange text-lg">R$ {total}</span>
+          <div className="flex justify-between">
+            <span className="text-xs text-muted">Total do passeio</span>
+            <span className="text-xs text-cream">R$ {total}</span>
           </div>
+          <div className="flex justify-between mt-1.5">
+            <span className="text-xs text-muted">{paymentPlan === "vista" ? "Pago agora" : "Sinal agora (50%)"}</span>
+            <span className="font-display text-orange text-lg">R$ {valorAgora}</span>
+          </div>
+          {paymentPlan === "sinal" && (
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-muted">Restante no embarque (50%)</span>
+              <span className="text-xs text-cream">R$ {restante}</span>
+            </div>
+          )}
         </div>
 
         <div className="font-display text-muted text-sm tracking-wide mt-4">FORMA DE PAGAMENTO</div>
         <div className="flex flex-col gap-2 mt-2">
           {PAYMENT_METHODS.map(({ key, label, icon: Icon }) => {
             const active = method === key;
+            const sub =
+              paymentPlan === "vista"
+                ? `Pagamento à vista (R$ ${total})`
+                : `Sinal de 50% agora (R$ ${sinal}) — restante no embarque`;
             return (
               <button
                 key={key}
@@ -157,9 +215,7 @@ export default function BookingPayment() {
                 <Icon size={18} color={active ? "#151311" : "#F5F0E6"} />
                 <div>
                   <div className={`font-display text-[15px] ${active ? "text-ink" : "text-white"}`}>{label}</div>
-                  <div className={`text-[10px] ${active ? "text-ink" : "text-muted"}`}>
-                    Pagamento à vista (R$ {total})
-                  </div>
+                  <div className={`text-[10px] ${active ? "text-ink" : "text-muted"}`}>{sub}</div>
                 </div>
               </button>
             );
