@@ -36,7 +36,7 @@ async function sendConfirmationEmail(booking) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Galavot Adventure <reservas@galavotadventure.com.br>",
+        from: process.env.RESEND_FROM_EMAIL || "Galavot Adventure <onboarding@resend.dev>",
         to: booking.customer_email,
         subject: `Reserva confirmada — código ${booking.booking_code}`,
         html: `
