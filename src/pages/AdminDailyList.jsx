@@ -45,7 +45,7 @@ export default function AdminDailyList({ bookings }) {
   // que vem por aí, não só do dia de hoje.
   const countByIso = {};
   bookings.forEach((b) => {
-    if (b.status === "cancelado") return;
+    if (b.status !== "confirmado") return;
     countByIso[b.booking_date] = (countByIso[b.booking_date] || 0) + 1;
   });
 
@@ -115,7 +115,9 @@ export default function AdminDailyList({ bookings }) {
         </p>
 
         {TOURS.map((tour) => {
-          const bookingsForTurno = bookings.filter((b) => b.tour_id === tour.id && b.booking_date === selected.iso);
+          const bookingsForTurno = bookings.filter(
+            (b) => b.tour_id === tour.id && b.booking_date === selected.iso && b.status === "confirmado"
+          );
           const message = buildMessage(tour, dateLabel, bookingsForTurno);
           const guidesForTurno = guides.filter(
             (g) => g.ativo && (tour.id === "matinal" ? g.recebe_matinal : g.recebe_vespertino)
