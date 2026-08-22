@@ -28,7 +28,6 @@ export default function BookingPayment() {
     paymentPlan,
     setPaymentPlan,
     customer,
-    setLastConfirmedBooking,
   } = useBooking();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,26 +41,10 @@ export default function BookingPayment() {
     setError(null);
     setLoading(true);
     try {
-      // Chama a função serverless (api/create-preference.js) que cria a
-      // preferência de pagamento no Mercado Pago e devolve o link de checkout.
-      const res = await fetch("/api/create-preference", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tourId: tour.id,
-          payerName: customer.name,
-          payerPhone: customer.phone,
-          paymentPlan,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Falha ao criar preferência de pagamento");
-      const data = await res.json();
-
-      // Salva a reserva no banco (pra aparecer no painel /admin). O servidor
-      // reconfere o limite de quadriciclos nesse momento — se acabou de
-      // lotar (ex: duas pessoas reservando ao mesmo tempo), avisamos o
-      // cliente em vez de deixar ele achar que reservou.
+      // 1. Salva a reserva no banco primeiro (nasce como "pendente_pagamento").
+      // O servidor reconfere o limite de quadriciclos nesse momento — se
+      // acabou de lotar, avisamos o cliente em vez de deixar ele achar que
+      // reservou.
       const bookingRes = await fetch("/api/create-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,41 +70,40 @@ export default function BookingPayment() {
         setLoading(false);
         return;
       }
+      if (!bookingRes.ok) throw new Error("Falha ao salvar a reserva");
+      const { booking } = await bookingRes.json();
 
-      let bookingCode = null;
-      try {
-        const bookingData = await bookingRes.json();
-        bookingCode = bookingData?.booking?.booking_code || null;
-      } catch (parseErr) {
-        // Se não vier o código por algum motivo, a reserva ainda foi feita —
-        // só não teremos o código curto pra mostrar no comprovante.
-      }
-      // Outros erros (ex: banco fora do ar momentaneamente) não bloqueiam o
-      // cliente — a reserva ainda chega pelo WhatsApp na tela de confirmação.
-
-      setLastConfirmedBooking({
-        tourId: tour.id,
-        tourName: tour.name,
-        time: selectedTime,
-        participants,
-        method,
-        paymentPlan,
-        total,
-        sinal,
-        restante,
-        valorAgora,
-        customer,
-        bookingCode,
+      // 2. Cria a preferência de pagamento no Mercado Pago, vinculada a
+      // essa reserva (external_reference = id da reserva).
+      const prefRes = await fetch("/api/create-preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tourId: tour.id,
+          payerName: customer.name,
+          paymentPlan,
+          bookingId: booking.id,
+          bookingCode: booking.booking_code,
+        }),
       });
 
-      // Em produção, redireciona para o checkout do Mercado Pago:
-      // window.location.href = data.init_point;
-      navigate(`/passeio/${id}/confirmacao`);
+      if (!prefRes.ok) {
+        const data = await prefRes.json().catch(() => ({}));
+        throw new Error(data.error || "Falha ao criar preferência de pagamento");
+      }
+      const { init_point } = await prefRes.json();
+
+      if (!init_point) throw new Error("Não recebemos o link de pagamento do Mercado Pago");
+
+      // 3. Manda o cliente de verdade pro checkout do Mercado Pago. A
+      // reserva só vira "confirmado" quando o webhook avisar que o
+      // pagamento caiu (api/mercadopago-webhook.js).
+      window.location.href = init_point;
     } catch (e) {
       setError(
-        "Ainda não foi possível conectar ao Mercado Pago. Configure a chave de acesso no arquivo .env (veja o README)."
+        e.message ||
+          "Ainda não foi possível conectar ao Mercado Pago. Configure a chave de acesso no arquivo .env (veja o README)."
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -232,14 +214,14 @@ export default function BookingPayment() {
         <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-4 bg-stone border border-hline">
           <MessageCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
           <span className="text-[11px] text-cream leading-relaxed">
-            Após o pagamento, você recebe pelo WhatsApp um código de reserva — é ele que autoriza seu embarque no dia
-            do passeio.
+            Você vai ser redirecionado pro Mercado Pago pra pagar com segurança. Depois de pagar, você recebe pelo
+            WhatsApp um código de reserva — é ele que autoriza seu embarque no dia do passeio.
           </span>
         </div>
       </div>
       <div className="px-4 pb-6 mt-auto pt-4">
         <PrimaryButton onClick={handleConfirm} disabled={!method || loading}>
-          {loading ? "PROCESSANDO..." : "CONFIRMAR RESERVA"}
+          {loading ? "REDIRECIONANDO..." : "IR PARA O PAGAMENTO"}
         </PrimaryButton>
       </div>
     </div>

@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     .select("booking_date")
     .eq("tour_id", tourId)
     .in("booking_date", dateList)
-    .neq("status", "cancelado");
+    .not("status", "in", "(cancelado,pagamento_recusado)");
 
   const bookedCounts = {};
   if (!error && data) {

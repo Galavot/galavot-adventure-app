@@ -18,7 +18,6 @@ export function BookingProvider({ children }) {
     termoVistoEm: null,
     aceiteEm: null,
   });
-  const [lastConfirmedBooking, setLastConfirmedBooking] = useState(null);
 
   const resetBookingFlow = () => {
     setParticipants(2);
@@ -43,8 +42,6 @@ export function BookingProvider({ children }) {
     setPaymentPlan,
     customer,
     setCustomer,
-    lastConfirmedBooking,
-    setLastConfirmedBooking,
     resetBookingFlow,
   };
 

@@ -111,7 +111,7 @@ export default function AdminDashboard() {
       {tab === "reservas" && (
         <>
           <div className="flex gap-2 px-4 pt-3 overflow-x-auto">
-            {["todos", "confirmado", "concluido", "cancelado"].map((f) => (
+            {["todos", "pendente_pagamento", "confirmado", "concluido", "cancelado", "pagamento_recusado"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
                   filter === f ? "bg-orange text-ink" : "bg-stone text-muted border border-hline"
                 }`}
               >
-                {f.toUpperCase()}
+                {{ pendente_pagamento: "AGUARDANDO PGTO", pagamento_recusado: "RECUSADO" }[f] || f.toUpperCase()}
               </button>
             ))}
           </div>

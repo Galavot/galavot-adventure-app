@@ -1,7 +1,15 @@
 // api/create-booking.js
 //
-// Salva a reserva no banco de dados (Supabase) assim que o cliente confirma
-// no site. É essa peça que faz o painel /admin conseguir listar as reservas.
+// POST -> Salva a reserva no banco de dados (Supabase) assim que o cliente
+// confirma no site. É essa peça que faz o painel /admin conseguir listar
+// as reservas. A reserva nasce como "pendente_pagamento" — só vira
+// "confirmado" quando o webhook do Mercado Pago avisa que o pagamento caiu
+// de verdade (ver api/mercadopago-webhook.js).
+//
+// GET  -> busca uma reserva pelo código (?code=GLV-1234), só com os dados
+// necessários pra tela de confirmação. Usado quando o cliente volta do
+// Mercado Pago (a página recarrega do zero nesse retorno, então não dá
+// pra confiar em nada guardado só na memória do navegador).
 //
 // Se a reserva foi feita por um parceiro logado (partnerId enviado), grava
 // o vínculo e calcula a comissão automaticamente (comissao_percentual do
@@ -46,10 +54,6 @@ function generateBookingCode() {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido" });
-  }
-
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -57,6 +61,28 @@ export default async function handler(req, res) {
     return res.status(500).json({
       error: "Banco de dados não configurado. Veja o README para configurar o Supabase.",
     });
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey);
+
+  if (req.method === "GET") {
+    const code = String(req.query.code || "").trim();
+    if (!code) return res.status(400).json({ error: "Código é obrigatório" });
+
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(
+        "booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, payment_method, payment_plan, total, valor_pago_inicial, status"
+      )
+      .eq("booking_code", code)
+      .single();
+
+    if (error || !data) return res.status(404).json({ error: "Reserva não encontrada" });
+    return res.status(200).json({ booking: data });
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido" });
   }
 
   const {
@@ -89,8 +115,6 @@ export default async function handler(req, res) {
   const tourName = tour.name;
   const maxQuadriciclos = tour.maxQuadriciclos || 5;
 
-  const supabase = createClient(supabaseUrl, serviceKey);
-
   // Busca o preço ATUAL desse passeio (pode ter sido alterado no /admin
   // desde a última vez que o código foi publicado).
   const { data: priceRow } = await supabase
@@ -103,13 +127,17 @@ export default async function handler(req, res) {
 
   // Reconfere disponibilidade no momento de salvar, e não só na tela
   // anterior — reduz a janela de overbooking quando duas pessoas reservam
-  // ao mesmo tempo o último horário disponível.
+  // ao mesmo tempo o último horário disponível. Reservas que nunca foram
+  // pagas (pendente_pagamento) não contam pra esse limite depois de um
+  // tempo — mas por ora contamos todas que não foram canceladas/recusadas,
+  // pra não vender a mesma vaga duas vezes enquanto o pagamento de alguém
+  // ainda está em andamento.
   const { count, error: countError } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true })
     .eq("tour_id", tourId)
     .eq("booking_date", date)
-    .neq("status", "cancelado");
+    .not("status", "in", "(cancelado,pagamento_recusado)");
 
   if (!countError && (count || 0) >= maxQuadriciclos) {
     return res.status(409).json({ error: "Esse horário acabou de lotar. Escolha outra data ou turno." });
@@ -141,7 +169,7 @@ export default async function handler(req, res) {
       payment_plan: plan,
       total,
       valor_pago_inicial: valorPagoInicial,
-      status: "confirmado",
+      status: "pendente_pagamento",
       partner_id: partnerId || null,
       comissao_valor: comissaoValor,
       comissao_paga: false,

@@ -10,7 +10,7 @@ import TourDetail from "./pages/TourDetail.jsx";
 import BookingDateTime from "./pages/BookingDateTime.jsx";
 import BookingCustomer from "./pages/BookingCustomer.jsx";
 import BookingPayment from "./pages/BookingPayment.jsx";
-import BookingConfirmation from "./pages/BookingConfirmation.jsx";
+import PaymentReturn from "./pages/PaymentReturn.jsx";
 import Bookings from "./pages/Bookings.jsx";
 import Profile from "./pages/Profile.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
@@ -34,7 +34,7 @@ function Shell() {
         <Route path="/passeio/:id/data-horario" element={<BookingDateTime />} />
         <Route path="/passeio/:id/dados" element={<BookingCustomer />} />
         <Route path="/passeio/:id/pagamento" element={<BookingPayment />} />
-        <Route path="/passeio/:id/confirmacao" element={<BookingConfirmation />} />
+        <Route path="/confirmacao/:code" element={<PaymentReturn />} />
         <Route path="/reservas" element={<Bookings />} />
         <Route path="/perfil" element={<Profile />} />
         <Route path="/admin" element={<AdminLogin />} />

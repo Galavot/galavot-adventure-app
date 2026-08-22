@@ -1,9 +1,13 @@
 // api/create-preference.js
 //
 // Função serverless (roda na Vercel, não no navegador do cliente).
-// Recebe os dados da reserva e cria uma "preferência de pagamento" no
-// Mercado Pago, retornando o link de checkout (init_point) para redirecionar
-// o cliente.
+// Recebe os dados da reserva (já salva no banco como "pendente_pagamento")
+// e cria uma "preferência de pagamento" no Mercado Pago, retornando o link
+// de checkout (init_point) para redirecionar o cliente de verdade.
+//
+// O "external_reference" da preferência é o ID da reserva no banco — é
+// assim que o webhook (api/mercadopago-webhook.js) sabe qual reserva
+// confirmar quando o pagamento cai.
 //
 // SEGURANÇA: o valor cobrado (amount) NUNCA é aceito como veio do
 // navegador — é sempre recalculado aqui a partir do preço ATUAL do passeio
@@ -14,8 +18,8 @@
 // Pré-requisitos:
 // 1. Criar conta em https://www.mercadopago.com.br
 // 2. Pegar o Access Token em: Seu negócio > Configurações > Credenciais
-// 3. Adicionar a variável de ambiente MP_ACCESS_TOKEN no projeto da Vercel
-//    (Project Settings > Environment Variables)
+// 3. Adicionar as variáveis de ambiente MP_ACCESS_TOKEN e SITE_URL no
+//    projeto da Vercel (Project Settings > Environment Variables)
 
 import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
@@ -32,7 +36,11 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourId, payerName, paymentPlan } = req.body;
+  const { tourId, payerName, paymentPlan, bookingId, bookingCode } = req.body;
+
+  if (!bookingId || !bookingCode) {
+    return res.status(400).json({ error: "Reserva não informada" });
+  }
 
   const tour = TOURS.find((t) => t.id === tourId);
   if (!tour) {
@@ -50,6 +58,7 @@ export default async function handler(req, res) {
 
   const plan = paymentPlan === "vista" ? "vista" : "sinal";
   const amount = plan === "vista" ? total : Math.round(total * 0.5);
+  const siteUrl = (process.env.SITE_URL || "").replace(/\/$/, "");
 
   try {
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -68,10 +77,12 @@ export default async function handler(req, res) {
           },
         ],
         payer: { name: payerName || undefined },
+        external_reference: bookingId,
+        notification_url: `${siteUrl}/api/mercadopago-webhook`,
         back_urls: {
-          success: `${process.env.SITE_URL || ""}/reservas`,
-          failure: `${process.env.SITE_URL || ""}/`,
-          pending: `${process.env.SITE_URL || ""}/reservas`,
+          success: `${siteUrl}/confirmacao/${bookingCode}`,
+          failure: `${siteUrl}/passeio/${tourId}/pagamento`,
+          pending: `${siteUrl}/confirmacao/${bookingCode}`,
         },
         auto_return: "approved",
       }),

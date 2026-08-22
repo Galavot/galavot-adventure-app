@@ -43,22 +43,20 @@ Em 1-2 minutos seu site estará no ar, com um link tipo
 3. Copie o **Access Token de produção**
 4. No painel da Vercel, vá em **Project Settings > Environment Variables** e adicione:
    - `MP_ACCESS_TOKEN` = (o token que você copiou)
-   - `SITE_URL` = a URL do seu site (ex: `https://galavot-adventure.vercel.app`)
+   - `SITE_URL` = a URL do seu site, sem barra no final (ex: `https://galavotadventure.com.br`)
 5. Clique em "Redeploy" para aplicar
 
-### 5. Ativar o redirecionamento real de pagamento
-No arquivo `src/pages/BookingPayment.jsx`, troque a linha comentada:
-```js
-// window.location.href = data.init_point;
-```
-por:
-```js
-window.location.href = data.init_point;
-```
-e remova a linha `navigate(...)` logo abaixo dela. Isso faz o cliente ser
-redirecionado de verdade para a tela de pagamento do Mercado Pago.
+Com isso configurado, o app já redireciona de verdade pro checkout do
+Mercado Pago — a reserva nasce como `pendente_pagamento` no banco e só vira
+`confirmado` quando o Mercado Pago avisa (via `api/mercadopago-webhook.js`)
+que o pagamento realmente caiu. Roda esse SQL a mais no Supabase, pra
+guardar o ID do pagamento:
 
-### 6. Configurar o painel administrativo (/admin)
+```sql
+alter table bookings add column mp_payment_id text;
+```
+
+### 5. Configurar o painel administrativo (/admin)
 
 O painel mostra a lista de reservas e deixa você marcar cada uma como
 confirmada, concluída ou cancelada.
