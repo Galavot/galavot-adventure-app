@@ -55,6 +55,7 @@ export default function BookingPayment() {
           participants,
           customerName: customer.name,
           customerPhone: customer.phone,
+          customerEmail: customer.email,
           method,
           paymentPlan,
           partnerId: sessionStorage.getItem("galavot_partner_id") || null,
@@ -81,6 +82,7 @@ export default function BookingPayment() {
         body: JSON.stringify({
           tourId: tour.id,
           payerName: customer.name,
+          payerEmail: customer.email,
           paymentPlan,
           bookingId: booking.id,
           bookingCode: booking.booking_code,

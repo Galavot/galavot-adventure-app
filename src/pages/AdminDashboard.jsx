@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck } from "lucide-react";
+import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck, Mail } from "lucide-react";
 import { Pill } from "../components/UI.jsx";
 import AdminPartners from "./AdminPartners.jsx";
 import AdminGuides from "./AdminGuides.jsx";
@@ -154,6 +154,12 @@ export default function AdminDashboard() {
                     <Phone size={12} color="#B7AFA2" />
                     <span className="text-[11px] text-muted">{b.customer_phone}</span>
                   </div>
+                  {b.customer_email && (
+                    <div className="flex items-center gap-1">
+                      <Mail size={12} color="#B7AFA2" />
+                      <span className="text-[11px] text-muted">{b.customer_email}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                   <span className="text-[11px] text-cream font-semibold">R$ {b.total}</span>

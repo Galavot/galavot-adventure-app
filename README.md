@@ -227,6 +227,33 @@ Enquanto a tabela `tour_prices` estiver vazia, o site usa o preço padrão
 (R$350) normalmente. Assim que você editar um preço pelo admin, uma linha
 é criada ali e o site passa a usar esse valor.
 
+### E-mail automático de confirmação (Resend)
+
+Depois que o pagamento é aprovado, o app manda um e-mail sozinho pro
+cliente com o código da reserva — assim ele não depende só de olhar a
+tela na hora (que pode fechar sem querer). Usa o **Resend**, que tem um
+plano grátis (3.000 e-mails/mês).
+
+1. Crie uma conta em https://resend.com
+2. Vá em **API Keys** e crie uma nova chave
+3. Pra mandar do seu próprio domínio (`reservas@galavotadventure.com.br`
+   em vez de um domínio genérico do Resend), vá em **Domains** → adiciona
+   `galavotadventure.com.br` → siga as instruções pra adicionar os
+   registros DNS no registro.br (parecido com o que já fizemos pra
+   conectar o domínio na Vercel)
+4. No painel da Vercel, adicione a variável `RESEND_API_KEY` = (a chave
+   que você copiou) e faça o redeploy
+
+Rode este SQL a mais no Supabase:
+
+```sql
+alter table bookings add column customer_email text;
+```
+
+Se você não configurar o Resend, o app continua funcionando normal — só
+não manda o e-mail (o código continua aparecendo na tela de confirmação
+normalmente).
+
 **Como cadastrar um parceiro:** entre em `/admin` → aba **PARCEIROS** →
 **+ Novo Parceiro**. Você escolhe o nome, código de acesso (o parceiro vai
 usar isso pra logar) e uma senha. O parceiro acessa em `/parceiro` com

@@ -72,7 +72,7 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, payment_method, payment_plan, total, valor_pago_inicial, status"
+        "booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status"
       )
       .eq("booking_code", code)
       .single();
@@ -92,6 +92,7 @@ export default async function handler(req, res) {
     participants,
     customerName,
     customerPhone,
+    customerEmail,
     method,
     partnerId,
     manualVistoEm,
@@ -165,6 +166,7 @@ export default async function handler(req, res) {
       participants,
       customer_name: customerName,
       customer_phone: customerPhone,
+      customer_email: customerEmail || null,
       payment_method: method,
       payment_plan: plan,
       total,

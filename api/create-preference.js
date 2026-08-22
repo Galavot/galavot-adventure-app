@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const { tourId, payerName, paymentPlan, bookingId, bookingCode } = req.body;
+  const { tourId, payerName, payerEmail, paymentPlan, bookingId, bookingCode } = req.body;
 
   if (!bookingId || !bookingCode) {
     return res.status(400).json({ error: "Reserva não informada" });
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
             currency_id: "BRL",
           },
         ],
-        payer: { name: payerName || undefined },
+        payer: { name: payerName || undefined, email: payerEmail || undefined },
         external_reference: bookingId,
         notification_url: `${siteUrl}/api/mercadopago-webhook`,
         back_urls: {
