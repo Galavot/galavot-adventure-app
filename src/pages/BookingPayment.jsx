@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CreditCard, Smartphone, AlertCircle, Landmark, Wallet, Check } from "lucide-react";
+import { CreditCard, Smartphone, AlertCircle, Landmark, Wallet, Check, MessageCircle } from "lucide-react";
 import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import { TOURS } from "../data.js";
 import { useBooking } from "../context/BookingContext.jsx";
@@ -228,6 +228,14 @@ export default function BookingPayment() {
             <span className="text-[11px] text-cream leading-relaxed">{error}</span>
           </div>
         )}
+
+        <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-4 bg-stone border border-hline">
+          <MessageCircle size={16} color="#F2600C" className="flex-shrink-0 mt-0.5" />
+          <span className="text-[11px] text-cream leading-relaxed">
+            Após o pagamento, você recebe pelo WhatsApp um código de reserva — é ele que autoriza seu embarque no dia
+            do passeio.
+          </span>
+        </div>
       </div>
       <div className="px-4 pb-6 mt-auto pt-4">
         <PrimaryButton onClick={handleConfirm} disabled={!method || loading}>

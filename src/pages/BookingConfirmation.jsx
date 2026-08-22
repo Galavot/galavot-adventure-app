@@ -74,7 +74,12 @@ export default function BookingConfirmation() {
                 {date.sub} · {time} · {participants} pessoa(s)
               </div>
               {bookingCode && (
-                <div className="text-[11px] text-orange font-semibold mt-1 font-mono">{bookingCode}</div>
+                <>
+                  <div className="text-[11px] text-orange font-semibold mt-1 font-mono">{bookingCode}</div>
+                  <div className="text-[9px] text-muted mt-0.5 max-w-[180px]">
+                    Esse é o seu código de embarque — também chega pelo WhatsApp
+                  </div>
+                </>
               )}
             </div>
             <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0 bg-ink">
