@@ -42,6 +42,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
 import { checkPendingBookingDirectly } from "./_mpConfirm.js";
+import { getClientIp as getRateLimitIp, checkRateLimit, registerFailedAttempt } from "./_rateLimit.js";
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -82,13 +83,28 @@ export default async function handler(req, res) {
     // busca. Devolve a lista (mais recentes primeiro), sem checar o
     // Mercado Pago de novo (é só listagem, não uma tela de pagamento
     // pendente).
+    //
+    // SEGURANÇA: exige o telefone COMPLETO (DDD + número, 10 ou 11
+    // dígitos) e faz correspondência EXATA — não por sufixo. Um match
+    // parcial (ex: só os últimos 8 dígitos) podia acidentalmente devolver
+    // a reserva de outra pessoa cujo número termina igual. Também aplica
+    // o mesmo limite de tentativas do login (8 buscas / 15min por IP),
+    // pra dificultar alguém varrer números tentando coletar dados de
+    // clientes.
     if (phone && !code) {
-      // Só os dígitos, pra não depender de como o cliente digitou (com
-      // espaço, traço, parênteses, etc) nem de como foi salvo na reserva.
       const digitsOnly = phone.replace(/\D/g, "");
-      if (digitsOnly.length < 8) {
-        return res.status(400).json({ error: "Telefone inválido" });
+      if (digitsOnly.length < 10) {
+        return res.status(400).json({ error: "Digite o telefone completo, com DDD." });
       }
+
+      const ip = getRateLimitIp(req);
+      const { blocked, retryAfterMinutes } = await checkRateLimit(supabase, ip, "phone-search");
+      if (blocked) {
+        return res.status(429).json({
+          error: `Muitas buscas seguidas. Tente novamente em ${retryAfterMinutes} minutos.`,
+        });
+      }
+      await registerFailedAttempt(supabase, ip, "phone-search");
 
       const { data, error } = await supabase
         .from("bookings")
@@ -98,7 +114,7 @@ export default async function handler(req, res) {
       if (error) return res.status(500).json({ error: error.message });
 
       const bookings = (data || []).filter(
-        (b) => (b.customer_phone || "").replace(/\D/g, "").endsWith(digitsOnly) || digitsOnly.endsWith((b.customer_phone || "").replace(/\D/g, ""))
+        (b) => (b.customer_phone || "").replace(/\D/g, "") === digitsOnly
       );
 
       return res.status(200).json({ bookings });

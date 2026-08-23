@@ -48,8 +48,8 @@ export default function Bookings() {
 
   const search = async (phoneToUse) => {
     const digitsOnly = phoneToUse.replace(/\D/g, "");
-    if (digitsOnly.length < 8) {
-      setError("Digite um telefone válido (com DDD).");
+    if (digitsOnly.length < 10) {
+      setError("Digite o telefone completo, com DDD (ex: (27) 99999-9999).");
       return;
     }
     setLoading(true);
