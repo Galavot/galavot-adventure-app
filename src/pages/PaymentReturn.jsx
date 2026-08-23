@@ -22,18 +22,27 @@ export default function PaymentReturn() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
+  // Conta falhas seguidas: uma única falha de rede passageira não pode
+  // travar a tela pra sempre em "não encontramos essa reserva" — só
+  // desistimos depois de várias tentativas seguidas sem sucesso.
+  const failCountRef = React.useRef(0);
+
   const load = async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/create-booking?code=${encodeURIComponent(code)}`);
       if (!res.ok) {
-        setNotFound(true);
+        failCountRef.current += 1;
+        if (failCountRef.current >= 5) setNotFound(true);
         return;
       }
       const data = await res.json();
+      failCountRef.current = 0;
+      setNotFound(false);
       setBooking(data.booking);
     } catch (err) {
-      setNotFound(true);
+      failCountRef.current += 1;
+      if (failCountRef.current >= 5) setNotFound(true);
     } finally {
       setLoading(false);
     }
