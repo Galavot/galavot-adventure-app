@@ -78,7 +78,7 @@ export default async function handler(req, res) {
     }
 
     const selectFields =
-      "id, booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status, pix_qr_code, pix_qr_code_base64";
+      "id, booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status";
 
     // Busca por telefone: usada pela tela "Minhas Reservas" do cliente, que
     // não tem login — o próprio telefone usado na reserva é a chave de
@@ -153,7 +153,6 @@ export default async function handler(req, res) {
     customerName,
     customerPhone,
     customerEmail,
-    customerCpf,
     method,
     partnerId,
     manualVistoEm,
@@ -242,7 +241,6 @@ export default async function handler(req, res) {
       customer_name: customerName,
       customer_phone: customerPhone,
       customer_email: customerEmail || null,
-      customer_cpf: (customerCpf || "").replace(/\D/g, "") || null,
       payment_method: method,
       payment_plan: plan,
       total,

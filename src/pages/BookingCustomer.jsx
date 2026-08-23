@@ -5,29 +5,6 @@ import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import DocumentModal from "../components/DocumentModal.jsx";
 import { useBooking } from "../context/BookingContext.jsx";
 
-// Validação de CPF de verdade (dígitos verificadores), não só contagem de
-// caracteres — evita reserva travar lá na frente, na hora de pagar, por
-// um CPF digitado errado.
-function isValidCpf(raw) {
-  const cpf = (raw || "").replace(/\D/g, "");
-  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-  const calcDigit = (base) => {
-    let sum = 0;
-    for (let i = 0; i < base.length; i++) sum += Number(cpf[i]) * (base - i);
-    const rest = (sum * 10) % 11;
-    return rest === 10 ? 0 : rest;
-  };
-  return calcDigit(10) === Number(cpf[9]) && calcDigit(11) === Number(cpf[10]);
-}
-
-function formatCpf(raw) {
-  const d = (raw || "").replace(/\D/g, "").slice(0, 11);
-  return d
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
-
 export default function BookingCustomer() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -40,9 +17,8 @@ export default function BookingCustomer() {
   const nameValid = customer.name.trim().length >= 3;
   const phoneValid = customer.phone.replace(/\D/g, "").length >= 10;
   const emailValid = customer.email.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
-  const cpfValid = isValidCpf(customer.cpf);
   const docsViewed = viewedManual && viewedTermo;
-  const canContinue = nameValid && phoneValid && emailValid && cpfValid && customer.accepted && docsViewed;
+  const canContinue = nameValid && phoneValid && emailValid && customer.accepted && docsViewed;
 
   const handleOpenDoc = (doc) => {
     setOpenDoc(doc);
@@ -110,23 +86,6 @@ export default function BookingCustomer() {
           {touched && !emailValid && (
             <p className="text-[11px] text-[#ef4444] mt-1">Esse e-mail não parece válido — corrige ou apaga o campo.</p>
           )}
-        </div>
-
-        <div>
-          <label className="text-[11px] font-semibold text-muted">CPF</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={customer.cpf}
-            onChange={(e) => setCustomer({ ...customer, cpf: formatCpf(e.target.value) })}
-            placeholder="000.000.000-00"
-            maxLength={14}
-            className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
-          />
-          <p className="text-[10px] text-muted mt-1">
-            Exigido pelo Mercado Pago pra processar o pagamento com segurança.
-          </p>
-          {touched && !cpfValid && <p className="text-[11px] text-[#ef4444] mt-1">Informe um CPF válido.</p>}
         </div>
 
         <div className="mt-2">
