@@ -42,3 +42,20 @@ export async function expireStalePendingBookingsBatch(supabase, tourId, bookingD
     .eq("status", "pendente_pagamento")
     .lt("created_at", cutoff);
 }
+
+// Versão SEM FILTRO — expira qualquer reserva pendente vencida, de
+// qualquer passeio/data. Usada no painel /admin (aba RESERVAS): sem isso,
+// uma reserva vencida só é limpa quando ALGUÉM tenta reservar de novo
+// aquele mesmo passeio+data específico — se ninguém tentar, ela fica
+// aparecendo como "pendente_pagamento" pra sempre no painel, mesmo já
+// tendo passado da hora, porque nada nunca "passa por ali" de novo pra
+// perceber isso.
+export async function expireAllStalePendingBookings(supabase) {
+  const cutoff = new Date(Date.now() - PENDING_LIMIT_MINUTES * 60 * 1000).toISOString();
+
+  await supabase
+    .from("bookings")
+    .update({ status: "pagamento_recusado" })
+    .eq("status", "pendente_pagamento")
+    .lt("created_at", cutoff);
+}

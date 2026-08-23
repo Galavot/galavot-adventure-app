@@ -8,6 +8,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { verifyToken } from "./_auth.js";
+import { expireAllStalePendingBookings } from "./_bookingExpiry.js";
 
 export default async function handler(req, res) {
   const auth = verifyToken(req, process.env.ADMIN_SECRET, "admin");
@@ -25,6 +26,12 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   if (req.method === "GET") {
+    // Expira reservas pendentes vencidas ANTES de listar, senão o painel
+    // mostraria "pendente_pagamento" indefinidamente pra uma reserva que
+    // já passou dos 20min, só porque ninguém tentou reservar de novo
+    // aquele mesmo passeio+data pra disparar a limpeza automaticamente.
+    await expireAllStalePendingBookings(supabase);
+
     const { data, error } = await supabase
       .from("bookings")
       .select("*")
