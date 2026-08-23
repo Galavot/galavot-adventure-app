@@ -67,7 +67,7 @@ export async function sendConfirmationEmail(booking) {
 async function applyStatus(supabase, bookingId, novoStatus, paymentId) {
   const { data: updated, error: updateError } = await supabase
     .from("bookings")
-    .update({ status: novoStatus, mp_payment_id: String(paymentId) })
+    .update({ status: novoStatus })
     .eq("id", bookingId)
     // Não regride uma reserva que já foi cancelada/concluída/etc por
     // engano se a notificação chegar atrasada ou duplicada.
@@ -78,6 +78,18 @@ async function applyStatus(supabase, bookingId, novoStatus, paymentId) {
   console.log(
     `[mp-confirm] update result: updated=${!!updated} error=${updateError ? updateError.message : "none"} booking_code=${updated?.booking_code || "?"}`
   );
+
+  // Guarda o ID do pagamento do Mercado Pago separadamente — se essa
+  // coluna não existir ainda na tabela (ou qualquer outro problema aqui),
+  // não pode travar a confirmação em si, que já é o que importa.
+  if (updated) {
+    supabase
+      .from("bookings")
+      .update({ mp_payment_id: String(paymentId) })
+      .eq("id", bookingId)
+      .then(() => {})
+      .catch(() => {});
+  }
 
   if (novoStatus === "confirmado" && updated) {
     await sendConfirmationEmail(updated);
