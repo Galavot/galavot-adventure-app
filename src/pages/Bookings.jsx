@@ -10,6 +10,7 @@ const STATUS_LABELS = {
   pendente_pagamento: "Aguardando pagamento",
   pagamento_recusado: "Pagamento recusado",
   cancelado: "Cancelado",
+  conflito_vaga: "Aguardando contato da equipe",
 };
 
 const STATUS_COLORS = {
@@ -17,6 +18,7 @@ const STATUS_COLORS = {
   pendente_pagamento: "bg-amber-500 text-ink",
   pagamento_recusado: "bg-red-600 text-white",
   cancelado: "bg-stoneLight text-cream",
+  conflito_vaga: "bg-amber-500 text-ink",
 };
 
 function StatusPill({ status }) {

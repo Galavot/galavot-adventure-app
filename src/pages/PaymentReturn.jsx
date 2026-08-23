@@ -150,6 +150,31 @@ export default function PaymentReturn() {
     );
   }
 
+  if (status === "conflito_vaga") {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-charcoal text-center px-6">
+        <Clock size={44} color="#F2600C" />
+        <div className="font-display text-white text-xl mt-3">RECEBEMOS SEU PAGAMENTO</div>
+        <p className="text-muted text-[12px] mt-2 max-w-[280px]">
+          Seu pagamento chegou depois do esperado e o horário escolhido já não tem mais vaga. Seu dinheiro está
+          garantido — vamos entrar em contato pra reagendar ou reembolsar, o que preferir.
+        </p>
+        <div className="text-orange text-[11px] font-mono mt-3">{booking_code}</div>
+        <a
+          href={`https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(
+            `Olá! Minha reserva ${booking_code} está com um conflito de vaga por pagamento tardio, pode me ajudar?`
+          )}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 rounded-lg py-3 mt-5 px-6 bg-moss"
+        >
+          <Phone size={16} color="#fff" />
+          <span className="font-display text-white text-[15px]">FALAR NO WHATSAPP AGORA</span>
+        </a>
+      </div>
+    );
+  }
+
   // status === "confirmado"
   return (
     <div className="flex-1 overflow-y-auto flex flex-col items-center bg-charcoal">

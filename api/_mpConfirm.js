@@ -16,15 +16,29 @@
 // Pago falhar ou demorar, sem esperar nada do navegador do cliente (a
 // verificação sempre acontece no servidor, direto com a API oficial).
 
-export async function sendConfirmationEmail(booking) {
+import { TOURS } from "../src/data.js";
+
+// api/_mpConfirm.js
+//
+// Lógica compartilhada pra confirmar uma reserva verificando o pagamento
+// direto na API do Mercado Pago. Usada em dois lugares:
+//
+// 1. api/mercadopago-webhook.js — quando o Mercado Pago avisa sozinho que
+//    o pagamento mudou (o caminho ideal, mais rápido).
+// 2. api/create-booking.js (GET) — como um plano B: toda vez que o
+//    cliente está na tela "aguardando pagamento" e ela verifica o status
+//    (a cada poucos segundos), a gente também pergunta direto pro
+//    Mercado Pago "esse pagamento já foi aprovado?", em vez de confiar
+//    cegamente que a notificação automática vai chegar a tempo (ou vai
+//    chegar, ponto — às vezes ela atrasa muito ou nem chega).
+//
+// Isso deixa a confirmação funcionando mesmo se o webhook do Mercado
+// Pago falhar ou demorar, sem esperar nada do navegador do cliente (a
+// verificação sempre acontece no servidor, direto com a API oficial).
+
+async function sendEmail(booking, subject, html) {
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey || !booking.customer_email) return;
-
-  const dateLabel = new Date(booking.booking_date + "T12:00:00").toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 
   try {
     const resendRes = await fetch("https://api.resend.com/emails", {
@@ -36,22 +50,8 @@ export async function sendConfirmationEmail(booking) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || "Galavot Adventure <onboarding@resend.dev>",
         to: booking.customer_email,
-        subject: `Reserva confirmada — código ${booking.booking_code}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-            <h2 style="color: #F2600C;">Tudo pronto pra aventura!</h2>
-            <p>Seu pagamento foi confirmado. Guarde esse código, ele autoriza seu embarque no dia do passeio:</p>
-            <div style="background: #151311; color: #F2600C; font-family: monospace; font-size: 22px; font-weight: bold; padding: 16px; border-radius: 8px; text-align: center; margin: 16px 0;">
-              ${booking.booking_code}
-            </div>
-            <p><strong>Passeio:</strong> ${booking.tour_name}<br/>
-            <strong>Data:</strong> ${dateLabel}<br/>
-            <strong>Horário:</strong> ${booking.booking_time}<br/>
-            <strong>Pessoas:</strong> ${booking.participants}</p>
-            <p>Qualquer dúvida, chama a gente no WhatsApp: (27) 99992-7056</p>
-            <p style="color: #888; font-size: 12px; margin-top: 24px;">Galavot Adventure — Guarapari, ES</p>
-          </div>
-        `,
+        subject,
+        html,
       }),
     });
 
@@ -70,55 +70,195 @@ export async function sendConfirmationEmail(booking) {
       `[resend] erro de rede ao enviar e-mail booking_code=${booking.booking_code} to=${booking.customer_email}: ${err.message}`
     );
     // Se o e-mail falhar, não é motivo pra travar o resto — a reserva já
-    // está confirmada de qualquer forma, o cliente ainda vê o código na
-    // tela.
+    // teve o status atualizado de qualquer forma.
   }
+}
+
+export async function sendConfirmationEmail(booking) {
+  const dateLabel = new Date(booking.booking_date + "T12:00:00").toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  await sendEmail(
+    booking,
+    `Reserva confirmada — código ${booking.booking_code}`,
+    `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="color: #F2600C;">Tudo pronto pra aventura!</h2>
+        <p>Seu pagamento foi confirmado. Guarde esse código, ele autoriza seu embarque no dia do passeio:</p>
+        <div style="background: #151311; color: #F2600C; font-family: monospace; font-size: 22px; font-weight: bold; padding: 16px; border-radius: 8px; text-align: center; margin: 16px 0;">
+          ${booking.booking_code}
+        </div>
+        <p><strong>Passeio:</strong> ${booking.tour_name}<br/>
+        <strong>Data:</strong> ${dateLabel}<br/>
+        <strong>Horário:</strong> ${booking.booking_time}<br/>
+        <strong>Pessoas:</strong> ${booking.participants}</p>
+        <p>Qualquer dúvida, chama a gente no WhatsApp: (27) 99992-7056</p>
+        <p style="color: #888; font-size: 12px; margin-top: 24px;">Galavot Adventure — Guarapari, ES</p>
+      </div>
+    `
+  );
+}
+
+// E-mail pro caso raro de CONFLITO DE VAGA: o pagamento chegou aprovado
+// depois da reserva já ter expirado por demora (mais de 20min), e nesse
+// meio tempo a vaga foi vendida pra outra pessoa. O dinheiro já foi
+// capturado, mas não dá pra simplesmente confirmar — precisa de contato
+// humano pra resolver (reembolso ou realocar pra outra data/horário).
+async function sendConflictEmail(booking) {
+  await sendEmail(
+    booking,
+    `Sobre sua reserva ${booking.booking_code} — precisamos falar com você`,
+    `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="color: #F2600C;">Recebemos seu pagamento</h2>
+        <p>Identificamos seu pagamento da reserva <strong>${booking.booking_code}</strong>, mas o horário escolhido
+        (${booking.tour_name}, ${booking.booking_date} às ${booking.booking_time}) já não tem mais vaga disponível —
+        isso pode acontecer quando o pagamento demora mais que o normal pra ser aprovado.</p>
+        <p>Fica tranquilo(a): seu dinheiro está garantido. Vamos entrar em contato em breve pra resolver, seja
+        reagendando pra outro horário ou fazendo o reembolso, o que preferir.</p>
+        <p>Se quiser adiantar, chama a gente no WhatsApp: (27) 99992-7056</p>
+        <p style="color: #888; font-size: 12px; margin-top: 24px;">Galavot Adventure — Guarapari, ES</p>
+      </div>
+    `
+  );
 }
 
 // Aplica a mudança de status no banco, dado um status novo já decidido
 // (novoStatus). Retorna a linha atualizada (ou null se não achou/não
 // mudou nada).
 async function applyStatus(supabase, bookingId, novoStatus, paymentId) {
-  // SEGURANÇA CONTRA E-MAIL DUPLICADO: nunca reconfirma uma reserva que já
-  // está "confirmado" (o Mercado Pago manda notificação duplicada às
-  // vezes). Mas PERMITE confirmar vindo de "pagamento_recusado" também —
-  // isso cobre o caso de uma reserva expirada por demora no pagamento
-  // (ver expireStalePendingBookings) cujo pagamento acaba chegando
-  // aprovado mais tarde: o dinheiro foi capturado, então a reserva
-  // precisa poder virar "confirmado" mesmo já tendo sido marcada como
-  // recusada/expirada antes.
-  const allowedSourceStatuses =
-    novoStatus === "confirmado" ? ["pendente_pagamento", "pagamento_recusado"] : ["pendente_pagamento"];
+  if (novoStatus !== "confirmado") {
+    // Caminho simples: rejeição/cancelamento só é aceito vindo de
+    // "pendente_pagamento" (nunca regride algo que já mudou de status).
+    const { data: updated, error: updateError } = await supabase
+      .from("bookings")
+      .update({ status: novoStatus })
+      .eq("id", bookingId)
+      .eq("status", "pendente_pagamento")
+      .select()
+      .single();
 
-  const { data: updated, error: updateError } = await supabase
+    console.log(
+      `[mp-confirm] update result: updated=${!!updated} error=${updateError ? updateError.message : "none"} booking_code=${updated?.booking_code || "?"}`
+    );
+
+    if (updated) {
+      supabase
+        .from("bookings")
+        .update({ mp_payment_id: String(paymentId) })
+        .eq("id", bookingId)
+        .then(() => {})
+        .catch(() => {});
+    }
+
+    return updated || null;
+  }
+
+  // CONFIRMAÇÃO: tenta primeiro o caminho normal (vindo de
+  // "pendente_pagamento"). SEGURANÇA CONTRA E-MAIL DUPLICADO: nunca
+  // reconfirma algo que já está "confirmado" (o Mercado Pago manda
+  // notificação duplicada às vezes) — por isso o .eq exato, não .in.
+  const { data: normalUpdate } = await supabase
     .from("bookings")
-    .update({ status: novoStatus })
+    .update({ status: "confirmado" })
     .eq("id", bookingId)
-    .in("status", allowedSourceStatuses)
+    .eq("status", "pendente_pagamento")
     .select()
     .single();
 
-  console.log(
-    `[mp-confirm] update result: updated=${!!updated} error=${updateError ? updateError.message : "none"} booking_code=${updated?.booking_code || "?"}`
-  );
-
-  // Guarda o ID do pagamento do Mercado Pago separadamente — se essa
-  // coluna não existir ainda na tabela (ou qualquer outro problema aqui),
-  // não pode travar a confirmação em si, que já é o que importa.
-  if (updated) {
+  if (normalUpdate) {
+    console.log(`[mp-confirm] update result: updated=true error=none booking_code=${normalUpdate.booking_code}`);
     supabase
       .from("bookings")
       .update({ mp_payment_id: String(paymentId) })
       .eq("id", bookingId)
       .then(() => {})
       .catch(() => {});
+    await sendConfirmationEmail(normalUpdate);
+    return normalUpdate;
   }
 
-  if (novoStatus === "confirmado" && updated) {
-    await sendConfirmationEmail(updated);
+  // Não achou como "pendente_pagamento" — pode ser: (a) já está
+  // confirmado/cancelado/etc (notificação duplicada/tardia, ignora em
+  // silêncio), ou (b) foi expirada automaticamente por demora
+  // (pagamento_recusado) e esse pagamento é uma RECUPERAÇÃO TARDIA.
+  const { data: expired } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("id", bookingId)
+    .eq("status", "pagamento_recusado")
+    .single();
+
+  if (!expired) {
+    console.log(`[mp-confirm] update result: updated=false error=none (já não estava mais pendente nem expirada)`);
+    return null;
   }
 
-  return updated || null;
+  // RECUPERAÇÃO TARDIA: confere se a vaga ainda está livre antes de
+  // confirmar — nesse meio tempo alguém pode ter comprado a mesma vaga.
+  const tour = TOURS.find((t) => t.id === expired.tour_id);
+  const maxQuadriciclos = tour?.maxQuadriciclos || 5;
+
+  const { count } = await supabase
+    .from("bookings")
+    .select("*", { count: "exact", head: true })
+    .eq("tour_id", expired.tour_id)
+    .eq("booking_date", expired.booking_date)
+    .not("status", "in", "(cancelado,pagamento_recusado)")
+    .neq("id", bookingId);
+
+  const vagaLivre = (count || 0) < maxQuadriciclos;
+
+  console.log(
+    `[mp-confirm] RECUPERAÇÃO TARDIA booking_code=${expired.booking_code} vaga_livre=${vagaLivre} ocupadas=${count}/${maxQuadriciclos}`
+  );
+
+  if (vagaLivre) {
+    const { data: recovered } = await supabase
+      .from("bookings")
+      .update({ status: "confirmado" })
+      .eq("id", bookingId)
+      .eq("status", "pagamento_recusado")
+      .select()
+      .single();
+
+    if (recovered) {
+      supabase
+        .from("bookings")
+        .update({ mp_payment_id: String(paymentId) })
+        .eq("id", bookingId)
+        .then(() => {})
+        .catch(() => {});
+      await sendConfirmationEmail(recovered);
+    }
+    return recovered || null;
+  }
+
+  // CONFLITO DE VERDADE: pagou, mas a vaga já foi pra outra pessoa.
+  // Marca um status próprio (nunca confunde com uma reserva comum) e
+  // avisa o cliente que a equipe vai entrar em contato.
+  const { data: conflito } = await supabase
+    .from("bookings")
+    .update({ status: "conflito_vaga" })
+    .eq("id", bookingId)
+    .eq("status", "pagamento_recusado")
+    .select()
+    .single();
+
+  if (conflito) {
+    console.log(`[mp-confirm] ⚠️ CONFLITO DE VAGA registrado: booking_code=${conflito.booking_code} — resolver manualmente no admin`);
+    supabase
+      .from("bookings")
+      .update({ mp_payment_id: String(paymentId) })
+      .eq("id", bookingId)
+      .then(() => {})
+      .catch(() => {});
+    await sendConflictEmail(conflito);
+  }
+  return conflito || null;
 }
 
 // Dado um objeto "payment" já retornado pela API do Mercado Pago, decide
