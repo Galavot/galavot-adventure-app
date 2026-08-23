@@ -15,7 +15,7 @@
 // create index login_attempts_ip_scope_idx on login_attempts (ip, scope, created_at);
 
 const WINDOW_MINUTES = 15;
-const MAX_ATTEMPTS = 8;
+const MAX_ATTEMPTS = 4;
 
 export function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
