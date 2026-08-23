@@ -2,9 +2,7 @@ import React from "react";
 import { Clock, Users } from "lucide-react";
 import { TopBar, Pill } from "../components/UI.jsx";
 
-const PAST_BOOKINGS = [
-  { tour: "PASSEIO MATINAL", date: "02 JUN · 08:00", status: "Concluído", people: 2, isExample: true },
-];
+const PAST_BOOKINGS = [];
 
 export default function Bookings() {
   const all = PAST_BOOKINGS;
