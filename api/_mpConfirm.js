@@ -115,19 +115,29 @@ export async function checkPendingBookingDirectly(supabase, booking) {
   if (!accessToken || !booking?.id || booking.status !== "pendente_pagamento") return null;
 
   try {
-    const searchRes = await fetch(
-      `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(booking.id)}&sort=date_created&criteria=desc`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    if (!searchRes.ok) return null;
+    const searchUrl = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(booking.id)}&sort=date_created&criteria=desc`;
+    const searchRes = await fetch(searchUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!searchRes.ok) {
+      const bodyText = await searchRes.text().catch(() => "");
+      console.log(
+        `[mp-confirm] search failed: status=${searchRes.status} booking_id=${booking.id} body=${bodyText.slice(0, 300)}`
+      );
+      return null;
+    }
+
     const data = await searchRes.json();
     const payment = data?.results?.[0];
+    console.log(
+      `[mp-confirm] search result: booking_id=${booking.id} results_count=${data?.results?.length ?? 0} first_payment_status=${payment?.status ?? "none"}`
+    );
     if (!payment) return null;
 
     return await confirmFromPayment(supabase, payment);
   } catch (err) {
-    // Falha na checagem direta não deve derrubar a tela do cliente — ela
-    // vai tentar de novo no próximo polling.
+    console.log(`[mp-confirm] search threw error: booking_id=${booking?.id} error=${err?.message}`);
     return null;
   }
 }
