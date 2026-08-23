@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   }
 
   const plan = paymentPlan === "vista" ? "vista" : "sinal";
-  const amount = plan === "vista" ? total : Math.round(total * 0.5);
+  const amount = plan === "vista" ? total : Math.round(total * 0.5 * 100) / 100;
   const siteUrl = (process.env.SITE_URL || "").replace(/\/$/, "");
 
   try {

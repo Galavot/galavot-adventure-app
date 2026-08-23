@@ -124,7 +124,7 @@ export default async function handler(req, res) {
     .eq("tour_id", tourId)
     .single();
   const total = priceRow?.price ? Number(priceRow.price) : tour.price;
-  const valorPagoInicial = plan === "vista" ? total : Math.round(total * 0.5);
+  const valorPagoInicial = plan === "vista" ? total : Math.round(total * 0.5 * 100) / 100;
 
   // Reconfere disponibilidade no momento de salvar, e não só na tela
   // anterior — reduz a janela de overbooking quando duas pessoas reservam
