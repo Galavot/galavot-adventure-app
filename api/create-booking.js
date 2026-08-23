@@ -108,16 +108,35 @@ export default async function handler(req, res) {
       }
       await registerFailedAttempt(supabase, ip, "phone-search");
 
+      // Reservas confirmadas/concluídas somem da lista depois de 3 meses
+      // (a pessoa não precisa ver passeio de meio ano atrás toda vez que
+      // abre o app). Tentativas que não deram certo (pendente/recusada/
+      // conflito) somem bem mais rápido, em 24h — depois disso é só ruído
+      // de uma tentativa de pagamento que falhou, não uma reserva de
+      // verdade que a pessoa precise continuar vendo.
+      const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+      const cutoff3Months = new Date(Date.now() - THREE_MONTHS_MS).toISOString();
+      const NOISY_STATUSES = ["pendente_pagamento", "pagamento_recusado", "conflito_vaga"];
+
       const { data, error } = await supabase
         .from("bookings")
         .select(selectFields + ", created_at")
+        // Nada com mais de 3 meses interessa em nenhum caso — filtra isso
+        // já no banco, não só na hora de exibir, pra não puxar reserva
+        // antiga demais desnecessariamente.
+        .gte("created_at", cutoff3Months)
         .order("created_at", { ascending: false });
 
       if (error) return res.status(500).json({ error: error.message });
 
-      const bookings = (data || []).filter(
-        (b) => (b.customer_phone || "").replace(/\D/g, "") === digitsOnly
-      );
+      const bookings = (data || []).filter((b) => {
+        if ((b.customer_phone || "").replace(/\D/g, "") !== digitsOnly) return false;
+        if (NOISY_STATUSES.includes(b.status)) {
+          return new Date(b.created_at).getTime() >= Date.now() - ONE_DAY_MS;
+        }
+        return true;
+      });
 
       return res.status(200).json({ bookings });
     }
