@@ -8,6 +8,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
 import { isPastSameDayCutoff } from "./_brazilTime.js";
+import { expireStalePendingBookingsBatch } from "./_bookingExpiry.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -46,6 +47,10 @@ export default async function handler(req, res) {
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
+
+  // Libera de volta pra venda qualquer reserva pendente há mais de 20min
+  // nessas datas, antes de contar quantas vagas já estão ocupadas.
+  await expireStalePendingBookingsBatch(supabase, tourId, dateList);
 
   const { data, error } = await supabase
     .from("bookings")

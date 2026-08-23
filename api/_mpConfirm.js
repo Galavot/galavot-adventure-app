@@ -79,17 +79,22 @@ export async function sendConfirmationEmail(booking) {
 // (novoStatus). Retorna a linha atualizada (ou null se não achou/não
 // mudou nada).
 async function applyStatus(supabase, bookingId, novoStatus, paymentId) {
-  // SEGURANÇA CONTRA E-MAIL DUPLICADO: o Mercado Pago costuma mandar a
-  // mesma notificação de pagamento mais de uma vez (comportamento normal
-  // dele, não é falha nossa). Por isso a transição só é aceita vindo de
-  // "pendente_pagamento" — nunca de um status que já é igual ao novo (ex:
-  // reserva já "confirmado" recebendo outra notificação de "aprovado" não
-  // deve reconfirmar e reenviar e-mail).
+  // SEGURANÇA CONTRA E-MAIL DUPLICADO: nunca reconfirma uma reserva que já
+  // está "confirmado" (o Mercado Pago manda notificação duplicada às
+  // vezes). Mas PERMITE confirmar vindo de "pagamento_recusado" também —
+  // isso cobre o caso de uma reserva expirada por demora no pagamento
+  // (ver expireStalePendingBookings) cujo pagamento acaba chegando
+  // aprovado mais tarde: o dinheiro foi capturado, então a reserva
+  // precisa poder virar "confirmado" mesmo já tendo sido marcada como
+  // recusada/expirada antes.
+  const allowedSourceStatuses =
+    novoStatus === "confirmado" ? ["pendente_pagamento", "pagamento_recusado"] : ["pendente_pagamento"];
+
   const { data: updated, error: updateError } = await supabase
     .from("bookings")
     .update({ status: novoStatus })
     .eq("id", bookingId)
-    .eq("status", "pendente_pagamento")
+    .in("status", allowedSourceStatuses)
     .select()
     .single();
 

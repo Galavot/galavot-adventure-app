@@ -44,6 +44,7 @@ import { TOURS } from "../src/data.js";
 import { checkPendingBookingDirectly } from "./_mpConfirm.js";
 import { getClientIp as getRateLimitIp, checkRateLimit, registerFailedAttempt } from "./_rateLimit.js";
 import { isPastSameDayCutoff } from "./_brazilTime.js";
+import { expireStalePendingBookings } from "./_bookingExpiry.js";
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -198,11 +199,14 @@ export default async function handler(req, res) {
 
   // Reconfere disponibilidade no momento de salvar, e não só na tela
   // anterior — reduz a janela de overbooking quando duas pessoas reservam
-  // ao mesmo tempo o último horário disponível. Reservas que nunca foram
-  // pagas (pendente_pagamento) não contam pra esse limite depois de um
-  // tempo — mas por ora contamos todas que não foram canceladas/recusadas,
-  // pra não vender a mesma vaga duas vezes enquanto o pagamento de alguém
-  // ainda está em andamento.
+  // ao mesmo tempo o último horário disponível.
+  //
+  // Libera de volta pra venda qualquer reserva pendente há mais de 20min
+  // nesse mesmo passeio/data, antes de contar quantas vagas já estão
+  // ocupadas — senão alguém que desistiu no meio do pagamento poderia
+  // travar a vaga pra sempre.
+  await expireStalePendingBookings(supabase, tourId, date);
+
   const { count, error: countError } = await supabase
     .from("bookings")
     .select("*", { count: "exact", head: true })
