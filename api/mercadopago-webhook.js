@@ -112,7 +112,7 @@ export default async function handler(req, res) {
 
     if (novoStatus) {
       const supabase = createClient(supabaseUrl, serviceKey);
-      const { data: updated } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("bookings")
         .update({ status: novoStatus, mp_payment_id: String(payment.id) })
         .eq("id", bookingId)
@@ -121,6 +121,10 @@ export default async function handler(req, res) {
         .in("status", ["pendente_pagamento", "confirmado", "pagamento_recusado"])
         .select()
         .single();
+
+      console.log(
+        `[mp-webhook] update result: updated=${!!updated} error=${updateError ? updateError.message : "none"} booking_code=${updated?.booking_code || "?"}`
+      );
 
       if (novoStatus === "confirmado" && updated) {
         await sendConfirmationEmail(updated);
