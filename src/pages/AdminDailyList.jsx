@@ -2,6 +2,17 @@ import React, { useEffect, useState } from "react";
 import { Send, CheckCircle2, XCircle, Sun, Moon, ChevronLeft, ChevronRight } from "lucide-react";
 import { TOURS, getUpcomingDates } from "../data.js";
 
+function paymentLine(b) {
+  const total = Number(b.total) || 0;
+  const pago = Number(b.valor_pago_inicial) || 0;
+  const restante = Math.max(0, Math.round((total - pago) * 100) / 100);
+
+  if (b.payment_plan === "sinal" && restante > 0) {
+    return `💰 Cobrar na hora: R$ ${restante.toFixed(2)} (pagou sinal de R$ ${pago.toFixed(2)})`;
+  }
+  return `💰 Pago 100% (R$ ${total.toFixed(2)}) — nada a cobrar`;
+}
+
 function buildMessage(tour, dateLabel, bookingsForTurno) {
   const lines = [`📋 LISTA — ${tour.name} (${tour.time})`, dateLabel, ""];
 
@@ -18,6 +29,7 @@ function buildMessage(tour, dateLabel, bookingsForTurno) {
         b.status === "cancelado" ? "❌ Cancelada" : "Status: " + b.status
       }`
     );
+    lines.push(`   ${paymentLine(b)}`);
   });
 
   lines.push("");
@@ -141,20 +153,34 @@ export default function AdminDailyList({ bookings }) {
                 )}
                 {bookingsForTurno.map((b) => {
                   const termoOk = !!b.aceite_em;
+                  const total = Number(b.total) || 0;
+                  const pago = Number(b.valor_pago_inicial) || 0;
+                  const restante = Math.max(0, Math.round((total - pago) * 100) / 100);
+                  const precisaCobrar = b.payment_plan === "sinal" && restante > 0;
                   return (
-                    <div key={b.id} className="flex items-center justify-between text-[12px]">
-                      <span className="text-cream">
-                        {b.booking_code || "—"} · {b.customer_name}
+                    <div key={b.id} className="flex flex-col text-[12px] py-1 border-b border-hline last:border-b-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-cream">
+                          {b.booking_code || "—"} · {b.customer_name}
+                        </span>
+                        {termoOk ? (
+                          <span className="flex items-center gap-1 text-[10px]" style={{ color: "#22c55e" }}>
+                            <CheckCircle2 size={11} /> termo ok
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[10px]" style={{ color: "#ef4444" }}>
+                            <XCircle size={11} /> sem termo
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        className="text-[11px] mt-0.5"
+                        style={{ color: precisaCobrar ? "#F2600C" : "#22c55e" }}
+                      >
+                        {precisaCobrar
+                          ? `💰 Cobrar na hora: R$ ${restante.toFixed(2)}`
+                          : `✅ Pago 100% (R$ ${total.toFixed(2)})`}
                       </span>
-                      {termoOk ? (
-                        <span className="flex items-center gap-1 text-[10px]" style={{ color: "#22c55e" }}>
-                          <CheckCircle2 size={11} /> termo ok
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-[10px]" style={{ color: "#ef4444" }}>
-                          <XCircle size={11} /> sem termo
-                        </span>
-                      )}
                     </div>
                   );
                 })}
