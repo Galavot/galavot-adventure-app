@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CheckCircle2, Clock, XCircle, MapPin, Phone, Navigation, RefreshCw } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, MapPin, Phone, Navigation, RefreshCw, Copy, Check } from "lucide-react";
 import { TopBar, PrimaryButton } from "../components/UI.jsx";
 import { CONTACT } from "../data.js";
 
@@ -21,6 +21,7 @@ export default function PaymentReturn() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Conta falhas seguidas: uma única falha de rede passageira não pode
   // travar a tela pra sempre em "não encontramos essa reserva" — só
@@ -97,6 +98,8 @@ export default function PaymentReturn() {
     total,
     valor_pago_inicial,
     status,
+    pix_qr_code,
+    pix_qr_code_base64,
   } = booking;
 
   const dateLabel = new Date(booking_date + "T12:00:00").toLocaleDateString("pt-BR", {
@@ -137,13 +140,56 @@ export default function PaymentReturn() {
     );
   }
 
+  const copyPixCode = () => {
+    if (!pix_qr_code) return;
+    navigator.clipboard?.writeText(pix_qr_code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
   if (status === "pendente_pagamento") {
+    // Pix gerado direto no app: mostra o QR Code + código copia-e-cola
+    // aqui mesmo, sem precisar de nenhum app específico do Mercado Pago.
+    if (pix_qr_code_base64) {
+      return (
+        <div className="flex-1 overflow-y-auto bg-charcoal flex flex-col items-center px-6 pt-6">
+          <div className="font-display text-white text-xl text-center">PAGAR COM PIX</div>
+          <p className="text-muted text-[11px] text-center mt-1">
+            Escaneie o QR Code ou copie o código — pague com o app de qualquer banco
+          </p>
+          <img
+            src={`data:image/png;base64,${pix_qr_code_base64}`}
+            alt="QR Code Pix"
+            className="w-44 h-44 mt-4 rounded-lg bg-white p-2"
+          />
+          <div className="w-full mt-4 rounded-lg px-3 py-2 border border-dashed border-hline bg-stone">
+            <p className="text-[9px] text-muted font-mono break-all leading-relaxed">{pix_qr_code}</p>
+          </div>
+          <button
+            onClick={copyPixCode}
+            className="w-full flex items-center justify-center gap-2 rounded-lg py-3 mt-3 bg-stoneLight border border-hline"
+          >
+            {copied ? <Check size={15} color="#22c55e" /> : <Copy size={15} color="#F5F0E6" />}
+            <span className="text-[13px] font-semibold text-cream">
+              {copied ? "Código copiado!" : "Copiar código Pix"}
+            </span>
+          </button>
+          <div className="flex items-center gap-2 text-muted text-[11px] mt-6">
+            <RefreshCw size={13} className="animate-spin" />
+            Aguardando confirmação do pagamento...
+          </div>
+          <div className="text-orange text-[11px] font-mono mt-2">{booking_code}</div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-charcoal text-center px-6">
         <Clock size={44} color="#F2600C" />
         <div className="font-display text-white text-xl mt-3">AGUARDANDO PAGAMENTO</div>
         <p className="text-muted text-[12px] mt-2 max-w-[280px]">
-          Assim que o Mercado Pago confirmar (o Pix costuma ser na hora), essa tela atualiza sozinha.
+          Assim que o Mercado Pago confirmar, essa tela atualiza sozinha.
         </p>
         <div className="text-orange text-[11px] font-mono mt-3">{booking_code}</div>
       </div>

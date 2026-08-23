@@ -14,6 +14,7 @@ export function BookingProvider({ children }) {
     name: "",
     phone: "",
     email: "",
+    cpf: "",
     accepted: false,
     manualVistoEm: null,
     termoVistoEm: null,
@@ -26,7 +27,16 @@ export function BookingProvider({ children }) {
     setSelectedTime(null);
     setMethod(null);
     setPaymentPlan("sinal");
-    setCustomer({ name: "", phone: "", email: "", accepted: false, manualVistoEm: null, termoVistoEm: null, aceiteEm: null });
+    setCustomer({
+      name: "",
+      phone: "",
+      email: "",
+      cpf: "",
+      accepted: false,
+      manualVistoEm: null,
+      termoVistoEm: null,
+      aceiteEm: null,
+    });
   };
 
   const value = {
