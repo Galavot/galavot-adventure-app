@@ -41,6 +41,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
+import { checkPendingBookingDirectly } from "./_mpConfirm.js";
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -72,12 +73,21 @@ export default async function handler(req, res) {
     const { data, error } = await supabase
       .from("bookings")
       .select(
-        "booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status"
+        "id, booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status"
       )
       .eq("booking_code", code)
       .single();
 
     if (error || !data) return res.status(404).json({ error: "Reserva não encontrada" });
+
+    // Plano B: se ainda está "pendente_pagamento", pergunta direto pro
+    // Mercado Pago se já tem um pagamento aprovado — não fica só esperando
+    // a notificação automática chegar, que às vezes atrasa ou falha.
+    if (data.status === "pendente_pagamento") {
+      const updated = await checkPendingBookingDirectly(supabase, data);
+      if (updated) return res.status(200).json({ booking: updated });
+    }
+
     return res.status(200).json({ booking: data });
   }
 
