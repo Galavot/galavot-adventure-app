@@ -104,6 +104,9 @@ export default async function handler(req, res) {
     let novoStatus = null;
     if (payment.status === "approved") novoStatus = "confirmado";
     else if (payment.status === "rejected" || payment.status === "cancelled") novoStatus = "pagamento_recusado";
+    console.log(
+      `[mp-webhook] paymentId=${paymentId} status=${payment.status} external_reference=${bookingId} novoStatus=${novoStatus}`
+    );
     // "pending", "in_process" etc: deixa como está, o cliente ainda não
     // terminou de pagar.
 
