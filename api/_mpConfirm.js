@@ -27,7 +27,7 @@ export async function sendConfirmationEmail(booking) {
   });
 
   try {
-    await fetch("https://api.resend.com/emails", {
+    const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${resendKey}`,
@@ -54,7 +54,21 @@ export async function sendConfirmationEmail(booking) {
         `,
       }),
     });
+
+    // O fetch em si não lança erro quando o Resend RECUSA o envio (limite
+    // atingido, destinatário inválido, etc) — ele só devolve um status de
+    // erro dentro da resposta normal. Sem checar isso, uma falha de envio
+    // ficava completamente invisível, sem nenhum log pra investigar depois.
+    if (!resendRes.ok) {
+      const errorBody = await resendRes.text().catch(() => "");
+      console.log(
+        `[resend] falha ao enviar e-mail booking_code=${booking.booking_code} to=${booking.customer_email} status=${resendRes.status} body=${errorBody}`
+      );
+    }
   } catch (err) {
+    console.log(
+      `[resend] erro de rede ao enviar e-mail booking_code=${booking.booking_code} to=${booking.customer_email}: ${err.message}`
+    );
     // Se o e-mail falhar, não é motivo pra travar o resto — a reserva já
     // está confirmada de qualquer forma, o cliente ainda vê o código na
     // tela.
