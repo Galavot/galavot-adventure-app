@@ -68,13 +68,45 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") {
     const code = String(req.query.code || "").trim();
-    if (!code) return res.status(400).json({ error: "Código é obrigatório" });
+    const phone = String(req.query.phone || "").trim();
+
+    if (!code && !phone) {
+      return res.status(400).json({ error: "Código ou telefone são obrigatórios" });
+    }
+
+    const selectFields =
+      "id, booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status";
+
+    // Busca por telefone: usada pela tela "Minhas Reservas" do cliente, que
+    // não tem login — o próprio telefone usado na reserva é a chave de
+    // busca. Devolve a lista (mais recentes primeiro), sem checar o
+    // Mercado Pago de novo (é só listagem, não uma tela de pagamento
+    // pendente).
+    if (phone && !code) {
+      // Só os dígitos, pra não depender de como o cliente digitou (com
+      // espaço, traço, parênteses, etc) nem de como foi salvo na reserva.
+      const digitsOnly = phone.replace(/\D/g, "");
+      if (digitsOnly.length < 8) {
+        return res.status(400).json({ error: "Telefone inválido" });
+      }
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(selectFields + ", created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) return res.status(500).json({ error: error.message });
+
+      const bookings = (data || []).filter(
+        (b) => (b.customer_phone || "").replace(/\D/g, "").endsWith(digitsOnly) || digitsOnly.endsWith((b.customer_phone || "").replace(/\D/g, ""))
+      );
+
+      return res.status(200).json({ bookings });
+    }
 
     const { data, error } = await supabase
       .from("bookings")
-      .select(
-        "id, booking_code, tour_id, tour_name, booking_date, booking_time, participants, customer_name, customer_phone, customer_email, payment_method, payment_plan, total, valor_pago_inicial, status"
-      )
+      .select(selectFields)
       .eq("booking_code", code)
       .single();
 
