@@ -33,7 +33,7 @@ export default function BookingPayment() {
   const [error, setError] = useState(null);
 
   const total = prices[tour.id] ?? tour.price; // preço é por quadriciclo, não por pessoa
-  const sinal = Math.round(total * 0.5);
+  const sinal = Math.round(total * 0.5 * 100) / 100;
   const restante = total - sinal;
   const valorAgora = paymentPlan === "vista" ? total : sinal;
 
