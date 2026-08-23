@@ -16,6 +16,7 @@ export default function BookingDateTime() {
   // cada botão quanto o resumo da data selecionada.
   const [availabilityMap, setAvailabilityMap] = useState({});
   const [checking, setChecking] = useState(true);
+  const [cutoffBlockedDate, setCutoffBlockedDate] = useState(null);
 
   useEffect(() => {
     if (tour) setSelectedTime(tour.time);
@@ -31,6 +32,7 @@ export default function BookingDateTime() {
       );
       const data = await res.json();
       setAvailabilityMap(data.availability || {});
+      setCutoffBlockedDate(data.cutoffBlockedDate || null);
     } catch (err) {
       // Se a checagem falhar, não bloqueia o cliente — assume tudo disponível
       const fallback = {};
@@ -52,6 +54,7 @@ export default function BookingDateTime() {
 
   const selectedIso = dates[selectedDateIndex]?.iso;
   const selectedAvailable = availabilityMap[selectedIso];
+  const isCutoff = selectedIso && selectedIso === cutoffBlockedDate;
   const esgotado = !checking && selectedAvailable !== undefined && selectedAvailable <= 0;
 
   return (
@@ -121,7 +124,7 @@ export default function BookingDateTime() {
                 Vagas disponíveis nesse dia ({tour.maxQuadriciclos} quadriciclos/turno)
               </span>
               <span className={`font-display text-base ${esgotado ? "text-[#ef4444]" : "text-white"}`}>
-                {esgotado ? "ESGOTADO" : `${selectedAvailable} de ${tour.maxQuadriciclos}`}
+                {esgotado ? (isCutoff ? "ENCERRADO" : "ESGOTADO") : `${selectedAvailable} de ${tour.maxQuadriciclos}`}
               </span>
             </>
           ) : null}
@@ -131,8 +134,9 @@ export default function BookingDateTime() {
           <div className="flex items-start gap-2 rounded-lg px-3 py-3 mt-3 bg-stone border border-[#ef4444]">
             <AlertCircle size={16} color="#ef4444" className="flex-shrink-0 mt-0.5" />
             <span className="text-[11px] text-cream leading-relaxed">
-              Esse dia já está com todas as vagas do turno preenchidas. Escolha outra data acima (as com selo
-              vermelho também estão lotadas).
+              {isCutoff
+                ? `Reservas pro passeio de hoje só até às ${String(tour.cutoffHour).padStart(2, "0")}h, pra não atrapalhar a saída do grupo. Escolha outra data acima.`
+                : "Esse dia já está com todas as vagas do turno preenchidas. Escolha outra data acima (as com selo vermelho também estão lotadas)."}
             </span>
           </div>
         )}

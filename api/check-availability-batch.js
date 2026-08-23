@@ -6,6 +6,8 @@
 // vez que a tela abre.
 
 import { createClient } from "@supabase/supabase-js";
+import { TOURS } from "../src/data.js";
+import { isPastSameDayCutoff } from "./_brazilTime.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -17,6 +19,7 @@ export default async function handler(req, res) {
 
   const { tourId, max, dates } = req.query;
   const maxQuadriciclos = Number(max) || 5;
+  const tour = TOURS.find((t) => t.id === tourId);
 
   if (!tourId || !dates) {
     return res.status(400).json({ error: "tourId e dates são obrigatórios" });
@@ -27,14 +30,19 @@ export default async function handler(req, res) {
     .map((d) => d.trim())
     .filter(Boolean);
 
+  // Data (se houver) que está com vaga real no banco mas já passou da
+  // hora limite de reserva de última hora pra esse passeio — usado pelo
+  // app pra mostrar uma mensagem diferente de "esgotado".
+  const cutoffBlockedDate = dateList.find((d) => isPastSameDayCutoff(tour, d)) || null;
+
   // Se o banco ainda não estiver configurado, assume disponibilidade total
   // em todas as datas ao invés de travar o cliente.
   if (!supabaseUrl || !serviceKey) {
     const fallback = {};
     dateList.forEach((d) => {
-      fallback[d] = maxQuadriciclos;
+      fallback[d] = d === cutoffBlockedDate ? 0 : maxQuadriciclos;
     });
-    return res.status(200).json({ availability: fallback, max: maxQuadriciclos });
+    return res.status(200).json({ availability: fallback, max: maxQuadriciclos, cutoffBlockedDate });
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
@@ -55,9 +63,13 @@ export default async function handler(req, res) {
 
   const availability = {};
   for (const d of dateList) {
+    if (d === cutoffBlockedDate) {
+      availability[d] = 0;
+      continue;
+    }
     const booked = bookedCounts[d] || 0;
     availability[d] = Math.max(0, maxQuadriciclos - booked);
   }
 
-  return res.status(200).json({ availability, max: maxQuadriciclos });
+  return res.status(200).json({ availability, max: maxQuadriciclos, cutoffBlockedDate });
 }

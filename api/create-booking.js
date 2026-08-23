@@ -43,6 +43,7 @@ import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
 import { checkPendingBookingDirectly } from "./_mpConfirm.js";
 import { getClientIp as getRateLimitIp, checkRateLimit, registerFailedAttempt } from "./_rateLimit.js";
+import { isPastSameDayCutoff } from "./_brazilTime.js";
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -173,6 +174,17 @@ export default async function handler(req, res) {
   const plan = paymentPlan === "vista" ? "vista" : "sinal";
   const tourName = tour.name;
   const maxQuadriciclos = tour.maxQuadriciclos || 5;
+
+  // Corte de reserva de última hora: pro passeio de HOJE, não aceita mais
+  // reserva depois do horário limite (mesmo que ainda tenha vaga), pra não
+  // atrapalhar o preparo/saída do grupo. Checado no servidor pra não
+  // depender só da tela ter bloqueado o botão.
+  if (isPastSameDayCutoff(tour, date)) {
+    const cutoffLabel = `${String(tour.cutoffHour).padStart(2, "0")}h`;
+    return res.status(409).json({
+      error: `Reservas pro ${tour.name.toLowerCase()} de hoje já encerraram (até ${cutoffLabel}). Escolha outra data.`,
+    });
+  }
 
   // Busca o preço ATUAL desse passeio (pode ter sido alterado no /admin
   // desde a última vez que o código foi publicado).
