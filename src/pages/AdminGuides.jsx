@@ -102,7 +102,7 @@ export default function AdminGuides() {
                 onChange={(e) => setForm({ ...form, recebeMatinal: e.target.checked })}
                 className="accent-orange"
               />
-              <span className="text-[12px] text-cream">Matinal</span>
+              <span className="text-[12px] text-cream">Manhã</span>
             </label>
             <label className="flex-1 flex items-center gap-2 rounded-lg px-3 py-2 bg-ink border border-hline">
               <input
@@ -111,7 +111,7 @@ export default function AdminGuides() {
                 onChange={(e) => setForm({ ...form, recebeVespertino: e.target.checked })}
                 className="accent-orange"
               />
-              <span className="text-[12px] text-cream">Vespertino</span>
+              <span className="text-[12px] text-cream">Tarde</span>
             </label>
           </div>
           <div className="mt-1">
@@ -146,7 +146,7 @@ export default function AdminGuides() {
                 g.recebe_matinal ? "bg-orange text-ink border-orange" : "bg-ink text-muted border-hline"
               }`}
             >
-              <Sun size={12} /> Matinal
+              <Sun size={12} /> Manhã
             </button>
             <button
               onClick={() => patchGuide(g.id, { recebeVespertino: !g.recebe_vespertino })}
@@ -154,7 +154,7 @@ export default function AdminGuides() {
                 g.recebe_vespertino ? "bg-orange text-ink border-orange" : "bg-ink text-muted border-hline"
               }`}
             >
-              <Moon size={12} /> Vespertino
+              <Moon size={12} /> Tarde
             </button>
           </div>
           {!g.ativo && <div className="text-[10px] text-muted mt-2">Guia desativado — não recebe listas</div>}

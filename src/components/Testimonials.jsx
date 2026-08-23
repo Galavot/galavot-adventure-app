@@ -15,7 +15,7 @@ const TESTIMONIALS = [
   },
   {
     name: "Camila e Bruno",
-    text: "Fizemos o vespertino em casal e foi perfeito pra fechar o dia. Equipamentos bons e equipe muito segura.",
+    text: "Fizemos o passeio da tarde em casal e foi perfeito pra fechar o dia. Equipamentos bons e equipe muito segura.",
   },
 ];
 

@@ -22,7 +22,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Quanto tempo dura o passeio e que horas começa?",
-    a: "O passeio Matinal sai a partir das 9h e o Vespertino a partir das 13h. A duração varia de 3h a 4h, dependendo do ritmo do grupo.",
+    a: "O passeio da Manhã sai a partir das 9h e o da Tarde a partir das 13h. A duração varia de 3h a 4h, dependendo do ritmo do grupo.",
   },
   {
     q: "E se chover no dia do passeio?",

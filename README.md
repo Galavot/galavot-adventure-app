@@ -178,7 +178,7 @@ probatório específico pro seu caso, é bom confirmar com um advogado, mas ter
 o registro é sempre melhor do que não ter).
 
 **2. Lista do Dia:** nova aba no `/admin` que mostra as reservas de hoje
-separadas por turno (Matinal/Vespertino), com um botão que abre o WhatsApp já
+separadas por turno (Manhã/Tarde), com um botão que abre o WhatsApp já
 com a lista pronta pra mandar pro guia — só falta 1 toque em "Enviar". Pra
 isso, cadastre os guias na aba GUIAS (nome + WhatsApp + quais turnos cada um
 recebe).

@@ -1,7 +1,7 @@
 export const TOURS = [
   {
     id: "matinal",
-    name: "PASSEIO MATINAL",
+    name: "PASSEIO DA MANHÃ",
     time: "A partir das 9h",
     duration: "3h a 4h",
     level: "Iniciante",
@@ -24,7 +24,7 @@ export const TOURS = [
   },
   {
     id: "vespertino",
-    name: "PASSEIO VESPERTINO",
+    name: "PASSEIO DA TARDE",
     time: "A partir das 13h",
     duration: "3h a 4h",
     level: "Iniciante",
