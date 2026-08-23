@@ -39,7 +39,7 @@ export async function sendConfirmationEmail(booking) {
         subject: `Reserva confirmada — código ${booking.booking_code}`,
         html: `
           <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-            <h2 style="color: #F2600C;">Tudo pronto pra aventura! 🏍️</h2>
+            <h2 style="color: #F2600C;">Tudo pronto pra aventura!</h2>
             <p>Seu pagamento foi confirmado. Guarde esse código, ele autoriza seu embarque no dia do passeio:</p>
             <div style="background: #151311; color: #F2600C; font-family: monospace; font-size: 22px; font-weight: bold; padding: 16px; border-radius: 8px; text-align: center; margin: 16px 0;">
               ${booking.booking_code}
