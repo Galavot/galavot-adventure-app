@@ -1,0 +1,8 @@
+[{
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.galavotadventure.twa",
+      "sha256_cert_fingerprints": ["0D:E4:39:77:AA:90:A0:10:76:44:2E:52:02:31:21:EA:08:9D:7B:EB:75:B8:4C:05:5A:5B:A1:D3:E0:AA:8C:1F"]
+    }
+}]
