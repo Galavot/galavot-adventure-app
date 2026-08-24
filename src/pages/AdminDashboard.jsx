@@ -9,6 +9,15 @@ import AdminPrices from "./AdminPrices.jsx";
 
 const STATUS_OPTIONS = ["confirmado", "concluido", "cancelado"];
 
+// A data vem do banco em formato ISO (2026-08-28) — mais legível pra
+// gente formatar como dd/mm/aaaa na tela.
+function formatDate(iso) {
+  if (!iso) return "";
+  const [year, month, day] = iso.split("-");
+  if (!year || !month || !day) return iso;
+  return `${day}/${month}/${year}`;
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("reservas"); // 'reservas' | 'parceiros'
@@ -143,7 +152,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-1">
                     <Clock size={12} color="#B7AFA2" />
                     <span className="text-[11px] text-muted">
-                      {b.booking_date} · {b.booking_time}
+                      {formatDate(b.booking_date)} · {b.booking_time}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">

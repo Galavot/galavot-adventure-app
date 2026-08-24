@@ -3,6 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { LogOut, RefreshCw, Clock, Users, PlusCircle, Wallet } from "lucide-react";
 import { Pill, PrimaryButton, Logo } from "../components/UI.jsx";
 
+// A data vem do banco em formato ISO (2026-08-28) — mais legível pra
+// gente formatar como dd/mm/aaaa na tela.
+function formatDate(iso) {
+  if (!iso) return "";
+  const [year, month, day] = iso.split("-");
+  if (!year || !month || !day) return iso;
+  return `${day}/${month}/${year}`;
+}
+
 export default function PartnerDashboard() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
@@ -118,7 +127,7 @@ export default function PartnerDashboard() {
               <div className="flex items-center gap-1">
                 <Clock size={12} color="#B7AFA2" />
                 <span className="text-[11px] text-muted">
-                  {b.booking_date} · {b.booking_time}
+                  {formatDate(b.booking_date)} · {b.booking_time}
                 </span>
               </div>
               <div className="flex items-center gap-1">
