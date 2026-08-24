@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2, HelpCircle, MapPin } from "lucide-react";
+import { Phone, Instagram, Handshake, ChevronRight, Download, CheckCircle2, HelpCircle, MapPin, ShieldCheck } from "lucide-react";
 import { TopBar, Logo } from "../components/UI.jsx";
 import InstallInstructionsModal from "../components/InstallInstructionsModal.jsx";
 import { usePWAInstallContext } from "../context/PWAInstallContext.jsx";
@@ -102,6 +102,15 @@ export default function Profile() {
         >
           <HelpCircle size={16} color="#F2600C" />
           <span className="text-[13px] text-cream flex-1 text-left">Perguntas Frequentes</span>
+          <ChevronRight size={16} color="#B7AFA2" />
+        </button>
+
+        <button
+          onClick={() => navigate("/privacidade")}
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-3 bg-stone border border-hline mt-2"
+        >
+          <ShieldCheck size={16} color="#F2600C" />
+          <span className="text-[13px] text-cream flex-1 text-left">Política de Privacidade</span>
           <ChevronRight size={16} color="#B7AFA2" />
         </button>
 

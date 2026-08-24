@@ -19,6 +19,7 @@ import LinkHub from "./pages/LinkHub.jsx";
 import PartnerLogin from "./pages/PartnerLogin.jsx";
 import PartnerDashboard from "./pages/PartnerDashboard.jsx";
 import Faq from "./pages/Faq.jsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 
 function Shell() {
   const location = useLocation();
@@ -43,6 +44,7 @@ function Shell() {
         <Route path="/parceiro" element={<PartnerLogin />} />
         <Route path="/parceiro/painel" element={<PartnerDashboard />} />
         <Route path="/faq" element={<Faq />} />
+        <Route path="/privacidade" element={<PrivacyPolicy />} />
       </Routes>
       {showNav && <BottomNav />}
     </div>
