@@ -27,8 +27,8 @@ const SECTIONS = [
     body: "Os dados de reservas confirmadas são mantidos pelo prazo necessário para fins fiscais e de atendimento. Reservas não concluídas (pendentes ou canceladas) são removidas automaticamente do sistema em um curto período.",
   },
   {
-    title: "6. Seus direitos",
-    body: "Você pode solicitar a qualquer momento a confirmação, correção ou exclusão dos seus dados pessoais, conforme a Lei Geral de Proteção de Dados (LGPD). Basta entrar em contato pelo WhatsApp ou e-mail informados abaixo.",
+    title: "6. Seus direitos e exclusão de dados",
+    body: `Você pode solicitar a qualquer momento a confirmação, correção ou exclusão dos seus dados pessoais coletados pelo aplicativo Galavot Adventure, conforme a Lei Geral de Proteção de Dados (LGPD). Para solicitar, basta enviar uma mensagem pelo WhatsApp ${CONTACT.phone} ou pelo e-mail ${CONTACT.email}, informando seu nome completo e o telefone usado na reserva. Ao confirmar a exclusão, removemos nome, telefone, e-mail e histórico de reservas do nosso banco de dados em até 5 dias úteis, exceto informações que somos legalmente obrigados a manter para fins fiscais (registros de pagamento), que ficam retidas pelo prazo exigido pela legislação brasileira.`,
   },
   {
     title: "7. Segurança",
