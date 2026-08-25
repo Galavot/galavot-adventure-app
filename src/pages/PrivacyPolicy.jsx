@@ -45,21 +45,21 @@ export default function PrivacyPolicy() {
     <div className="flex-1 overflow-y-auto bg-charcoal flex flex-col">
       <TopBar title="POLÍTICA DE PRIVACIDADE" showBack />
       <div className="px-4 pb-8 flex flex-col gap-5">
-        <p className="text-xs text-bone/60 pt-1">Última atualização: agosto de 2026</p>
+        <p className="text-xs text-muted pt-1">Última atualização: agosto de 2026</p>
 
         {SECTIONS.map((s, i) => (
           <div key={i} className="rounded-xl bg-stone border border-hline p-4">
             <h2 className="text-sm font-bold text-orange mb-1.5 tracking-wide">{s.title}</h2>
-            <p className="text-sm text-bone/85 leading-relaxed">{s.body}</p>
+            <p className="text-sm text-cream/90 leading-relaxed">{s.body}</p>
           </div>
         ))}
 
         <div className="rounded-xl bg-stone border border-hline p-4">
           <h2 className="text-sm font-bold text-orange mb-1.5 tracking-wide">9. Contato</h2>
-          <p className="text-sm text-bone/85 leading-relaxed">
+          <p className="text-sm text-cream/90 leading-relaxed">
             Dúvidas sobre seus dados ou esta política podem ser enviadas para{" "}
-            <span className="text-bone">{CONTACT.email}</span> ou pelo WhatsApp{" "}
-            <span className="text-bone">{CONTACT.phone}</span>.
+            <span className="text-cream">{CONTACT.email}</span> ou pelo WhatsApp{" "}
+            <span className="text-cream">{CONTACT.phone}</span>.
           </p>
         </div>
       </div>
