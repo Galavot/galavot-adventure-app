@@ -41,6 +41,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
+import { isValidCustomerName, isValidPhoneNumber } from "../src/utils/validation.js";
 import { checkPendingBookingDirectly } from "./_mpConfirm.js";
 import { getClientIp as getRateLimitIp, checkRateLimit, registerFailedAttempt } from "./_rateLimit.js";
 import { isPastSameDayCutoff } from "./_brazilTime.js";
@@ -182,6 +183,16 @@ export default async function handler(req, res) {
 
   if (!tourId || !time || !customerName || !date) {
     return res.status(400).json({ error: "Dados da reserva incompletos" });
+  }
+
+  // Mesma checagem do formulário, refeita aqui no servidor — impede que
+  // alguém contorne a validação da tela mandando a reserva direto pra API
+  // com nome/telefone inventados (ex: "Cghuu", "11111111111221").
+  if (!isValidCustomerName(customerName)) {
+    return res.status(400).json({ error: "Informe um nome completo válido (nome e sobrenome)." });
+  }
+  if (!isValidPhoneNumber(customerPhone)) {
+    return res.status(400).json({ error: "Informe um WhatsApp válido, com DDD." });
   }
 
   // O passeio precisa existir na lista oficial — nunca confiamos em

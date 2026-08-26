@@ -4,6 +4,7 @@ import { FileText, ShieldCheck, Check } from "lucide-react";
 import { TopBar, TrailProgress, PrimaryButton } from "../components/UI.jsx";
 import DocumentModal from "../components/DocumentModal.jsx";
 import { useBooking } from "../context/BookingContext.jsx";
+import { isValidCustomerName, isValidPhoneNumber } from "../utils/validation.js";
 
 export default function BookingCustomer() {
   const { id } = useParams();
@@ -14,8 +15,8 @@ export default function BookingCustomer() {
   const [viewedManual, setViewedManual] = useState(false);
   const [viewedTermo, setViewedTermo] = useState(false);
 
-  const nameValid = customer.name.trim().length >= 3;
-  const phoneValid = customer.phone.replace(/\D/g, "").length >= 10;
+  const nameValid = isValidCustomerName(customer.name);
+  const phoneValid = isValidPhoneNumber(customer.phone);
   const emailValid = customer.email.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const docsViewed = viewedManual && viewedTermo;
   const canContinue = nameValid && phoneValid && emailValid && customer.accepted && docsViewed;
@@ -56,7 +57,9 @@ export default function BookingCustomer() {
             placeholder="Como está no documento"
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
-          {touched && !nameValid && <p className="text-[11px] text-[#ef4444] mt-1">Informe seu nome completo.</p>}
+          {touched && !nameValid && (
+            <p className="text-[11px] text-[#ef4444] mt-1">Informe seu nome completo (nome e sobrenome).</p>
+          )}
         </div>
 
         <div>
@@ -68,7 +71,9 @@ export default function BookingCustomer() {
             placeholder="(27) 9 9999-9999"
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
-          {touched && !phoneValid && <p className="text-[11px] text-[#ef4444] mt-1">Informe um WhatsApp válido.</p>}
+          {touched && !phoneValid && (
+            <p className="text-[11px] text-[#ef4444] mt-1">Informe um WhatsApp válido, com DDD.</p>
+          )}
         </div>
 
         <div>
