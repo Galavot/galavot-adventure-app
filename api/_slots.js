@@ -3,7 +3,7 @@
 // Helper compartilhado (prefixo "_" = não conta no limite de 12 funções
 // serverless da Vercel) pra descobrir quantos quadriciclos cabem por
 // turno. Segue o MESMO padrão já usado pro preço: o valor "oficial" fica
-// na tabela "tour_prices" (editável no /admin, aba PREÇOS), e só cai no
+// na tabela "tour_prices" (editável no /admin, aba CONFIGURAÇÕES), e só cai no
 // padrão fixo de src/data.js (TOURS) se ainda não foi configurado nada
 // no banco, ou se o banco estiver fora do ar.
 //

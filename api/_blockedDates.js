@@ -3,7 +3,7 @@
 // Helper compartilhado (prefixo "_" = não conta no limite de 12 funções
 // serverless da Vercel) pra consultar a tabela "blocked_dates" — dias em
 // que o Sid decidiu não vender um passeio específico (evento, manutenção
-// geral, feriado etc), configurável na aba PREÇOS do /admin.
+// geral, feriado etc), configurável na aba CONFIGURAÇÕES do /admin.
 //
 // Usado por: check-availability-batch.js (mostra a data como indisponível
 // no calendário, tanto no app quanto na tela de reserva do parceiro) e

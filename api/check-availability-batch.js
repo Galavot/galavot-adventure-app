@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "tourId e dates são obrigatórios" });
   }
 
-  // O número de vagas por turno é sempre reconferido no banco (aba PREÇOS
+  // O número de vagas por turno é sempre reconferido no banco (aba CONFIGURAÇÕES
   // do /admin) — o "max" que vem na query é só um fallback pra quando o
   // banco está fora do ar, nunca a fonte de verdade.
   const queryFallback = Number(max) || tour?.maxQuadriciclos || 5;

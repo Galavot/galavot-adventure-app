@@ -206,7 +206,7 @@ export default async function handler(req, res) {
 
   const plan = paymentPlan === "vista" ? "vista" : "sinal";
   const tourName = tour.name;
-  // Vagas por turno ATUAIS (pode ter sido alterado no /admin, aba PREÇOS —
+  // Vagas por turno ATUAIS (pode ter sido alterado no /admin, aba CONFIGURAÇÕES —
   // ex: quadriciclo novo aumentando vaga, ou um em manutenção reduzindo).
   const maxQuadriciclos = await getMaxQuadriciclos(supabase, tour);
 
@@ -221,7 +221,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Data bloqueada manualmente pelo Sid (aba PREÇOS do /admin) — checado
+  // Data bloqueada manualmente pelo Sid (aba CONFIGURAÇÕES do /admin) — checado
   // no servidor pra valer tanto pro app quanto pra reserva feita por
   // parceiro, e pra não dar brecha se alguém tentar forçar via API.
   if (await isDateBlocked(supabase, tourId, date)) {
