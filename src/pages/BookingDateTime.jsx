@@ -17,6 +17,9 @@ export default function BookingDateTime() {
   const [availabilityMap, setAvailabilityMap] = useState({});
   const [checking, setChecking] = useState(true);
   const [cutoffBlockedDate, setCutoffBlockedDate] = useState(null);
+  // Datas em que o Sid bloqueou manualmente a venda desse passeio (aba
+  // PREÇOS do /admin) — mostradas com uma mensagem diferente de "esgotado".
+  const [manuallyBlockedDates, setManuallyBlockedDates] = useState([]);
   // Vagas por turno vindas do servidor (fonte de verdade, editável no
   // /admin) — só cai no valor fixo de data.js antes da 1ª resposta chegar.
   const [maxSlots, setMaxSlots] = useState(tour?.maxQuadriciclos || 5);
@@ -36,6 +39,7 @@ export default function BookingDateTime() {
       const data = await res.json();
       setAvailabilityMap(data.availability || {});
       setCutoffBlockedDate(data.cutoffBlockedDate || null);
+      setManuallyBlockedDates(data.manuallyBlockedDates || []);
       if (data.max) setMaxSlots(data.max);
     } catch (err) {
       // Se a checagem falhar, não bloqueia o cliente — assume tudo disponível
@@ -59,6 +63,7 @@ export default function BookingDateTime() {
   const selectedIso = dates[selectedDateIndex]?.iso;
   const selectedAvailable = availabilityMap[selectedIso];
   const isCutoff = selectedIso && selectedIso === cutoffBlockedDate;
+  const isManuallyBlocked = selectedIso && manuallyBlockedDates.includes(selectedIso);
   const esgotado = !checking && selectedAvailable !== undefined && selectedAvailable <= 0;
 
   return (
@@ -128,7 +133,13 @@ export default function BookingDateTime() {
                 Vagas disponíveis nesse dia ({maxSlots} quadriciclos/turno)
               </span>
               <span className={`font-display text-base ${esgotado ? "text-[#ef4444]" : "text-white"}`}>
-                {esgotado ? (isCutoff ? "ENCERRADO" : "ESGOTADO") : `${selectedAvailable} de ${maxSlots}`}
+                {esgotado
+                  ? isCutoff
+                    ? "ENCERRADO"
+                    : isManuallyBlocked
+                    ? "INDISPONÍVEL"
+                    : "ESGOTADO"
+                  : `${selectedAvailable} de ${maxSlots}`}
               </span>
             </>
           ) : null}
@@ -140,6 +151,8 @@ export default function BookingDateTime() {
             <span className="text-[11px] text-cream leading-relaxed">
               {isCutoff
                 ? `Reservas pro passeio de hoje só até às ${String(tour.cutoffHour).padStart(2, "0")}h, pra não atrapalhar a saída do grupo. Escolha outra data acima.`
+                : isManuallyBlocked
+                ? "Não estamos com esse passeio disponível nessa data. Escolha outro dia acima."
                 : "Esse dia já está com todas as vagas do turno preenchidas. Escolha outra data acima (as com selo vermelho também estão lotadas)."}
             </span>
           </div>

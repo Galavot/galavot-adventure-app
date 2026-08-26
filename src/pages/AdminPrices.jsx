@@ -1,8 +1,19 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Tag, Pencil, Save, X, Car } from "lucide-react";
+import { Tag, Pencil, Save, X, Car, Ban, Trash2, Plus } from "lucide-react";
+import { TOURS, getUpcomingDates } from "../data.js";
+
+const UPCOMING_DATES = getUpcomingDates(30);
+
+function formatBlockedDate(iso) {
+  const found = UPCOMING_DATES.find((d) => d.iso === iso);
+  if (found) return `${found.sub} · ${found.label}`;
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 export default function AdminPrices() {
   const [prices, setPrices] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -13,6 +24,12 @@ export default function AdminPrices() {
   const [editingSlotsId, setEditingSlotsId] = useState(null);
   const [slotsDraft, setSlotsDraft] = useState("");
   const [savingSlots, setSavingSlots] = useState(false);
+  // Formulário de novo bloqueio de data.
+  const [addingBlock, setAddingBlock] = useState(false);
+  const [blockTourId, setBlockTourId] = useState(TOURS[0]?.id || "");
+  const [blockDate, setBlockDate] = useState(UPCOMING_DATES[0]?.iso || "");
+  const [savingBlock, setSavingBlock] = useState(false);
+  const [deletingBlockId, setDeletingBlockId] = useState(null);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -26,6 +43,7 @@ export default function AdminPrices() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao carregar preços");
       setPrices(data.prices || []);
+      setBlockedDates(data.blockedDates || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -84,6 +102,45 @@ export default function AdminPrices() {
       setError(err.message);
     } finally {
       setSavingSlots(false);
+    }
+  };
+
+  const handleAddBlock = async () => {
+    setSavingBlock(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ tourId: blockTourId, date: blockDate }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao bloquear data");
+      setAddingBlock(false);
+      loadPrices();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingBlock(false);
+    }
+  };
+
+  const handleDeleteBlock = async (id) => {
+    setDeletingBlockId(id);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-prices", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao desbloquear data");
+      loadPrices();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingBlockId(null);
     }
   };
 
@@ -203,6 +260,93 @@ export default function AdminPrices() {
           </div>
         </div>
       ))}
+
+      <div className="rounded-xl p-4 bg-stone border border-hline">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Ban size={14} color="#F2600C" />
+            <span className="font-display text-white text-[15px]">DATAS BLOQUEADAS</span>
+          </div>
+          {!addingBlock && (
+            <button
+              onClick={() => setAddingBlock(true)}
+              className="flex items-center gap-1 text-[11px] font-bold text-orange"
+            >
+              <Plus size={12} /> Bloquear
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-muted mt-1">
+          Escolha uma data em que não quer vender esse passeio (evento, feriado, manutenção geral). Pode bloquear só
+          um turno ou os dois.
+        </p>
+
+        {addingBlock && (
+          <div className="flex flex-col gap-2 mt-3 rounded-lg p-3 bg-ink border border-hline">
+            <select
+              value={blockTourId}
+              onChange={(e) => setBlockTourId(e.target.value)}
+              className="bg-charcoal text-white text-[13px] rounded-lg px-3 py-2 border border-hline outline-none"
+            >
+              {TOURS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={blockDate}
+              onChange={(e) => setBlockDate(e.target.value)}
+              className="bg-charcoal text-white text-[13px] rounded-lg px-3 py-2 border border-hline outline-none"
+            >
+              {UPCOMING_DATES.map((d) => (
+                <option key={d.iso} value={d.iso}>
+                  {d.sub} · {d.label}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddBlock}
+                disabled={savingBlock}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange text-ink text-[12px] font-bold"
+              >
+                <Save size={12} /> Confirmar bloqueio
+              </button>
+              <button
+                onClick={() => setAddingBlock(false)}
+                className="flex items-center px-3 rounded-lg bg-charcoal border border-hline"
+              >
+                <X size={14} color="#B7AFA2" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-2 mt-3">
+          {blockedDates.length === 0 && !addingBlock && (
+            <p className="text-[11px] text-muted">Nenhuma data bloqueada no momento.</p>
+          )}
+          {blockedDates.map((b) => (
+            <div
+              key={b.id}
+              className="flex items-center justify-between rounded-lg px-3 py-2 bg-ink border border-hline"
+            >
+              <div className="text-[12px] text-cream">
+                <span className="font-semibold">{formatBlockedDate(b.date)}</span>
+                <span className="text-muted"> · {b.tourName}</span>
+              </div>
+              <button
+                onClick={() => handleDeleteBlock(b.id)}
+                disabled={deletingBlockId === b.id}
+                aria-label="Desbloquear"
+              >
+                <Trash2 size={14} color="#ef4444" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

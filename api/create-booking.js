@@ -47,6 +47,7 @@ import { getClientIp as getRateLimitIp, checkRateLimit, registerFailedAttempt } 
 import { isPastSameDayCutoff } from "./_brazilTime.js";
 import { expireStalePendingBookings } from "./_bookingExpiry.js";
 import { getMaxQuadriciclos } from "./_slots.js";
+import { isDateBlocked } from "./_blockedDates.js";
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -217,6 +218,15 @@ export default async function handler(req, res) {
     const cutoffLabel = `${String(tour.cutoffHour).padStart(2, "0")}h`;
     return res.status(409).json({
       error: `Reservas pro ${tour.name.toLowerCase()} de hoje já encerraram (até ${cutoffLabel}). Escolha outra data.`,
+    });
+  }
+
+  // Data bloqueada manualmente pelo Sid (aba PREÇOS do /admin) — checado
+  // no servidor pra valer tanto pro app quanto pra reserva feita por
+  // parceiro, e pra não dar brecha se alguém tentar forçar via API.
+  if (await isDateBlocked(supabase, tourId, date)) {
+    return res.status(409).json({
+      error: `Não estamos vendendo o ${tour.name.toLowerCase()} nessa data. Escolha outro dia.`,
     });
   }
 

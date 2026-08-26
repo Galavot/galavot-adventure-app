@@ -4,16 +4,21 @@
 //                     usado pelo site pra saber o preço atual de cada passeio
 // GET (com token admin) -> modo admin: devolve lista detalhada (nome, preço,
 //                     vagas por turno, se é o padrão, quando foi atualizado)
-//                     pra tela de edição
+//                     e a lista de datas bloqueadas, pra tela de edição
 // PATCH (com token admin) -> atualiza o preço E/OU o número de vagas
 //                     (quadriciclos) por turno de um passeio. Manda só o
 //                     campo que quer mudar (price ou maxQuadriciclos) — o
 //                     outro fica como já estava.
+// POST (com token admin) -> bloqueia uma data pra um passeio (tourId +
+//                     date), impedindo reserva nela — usado quando o Sid
+//                     não quer vender passeio num dia específico (evento,
+//                     manutenção geral, feriado etc).
+// DELETE (com token admin) -> desbloqueia (remove o bloqueio) por id.
 //
-// Os dois modos ficam no mesmo arquivo de propósito: a Vercel, no plano
-// gratuito, limita a 12 funções serverless por deploy — juntar esse
-// endpoint público com o admin evita passar do limite (veja também
-// check-availability-batch.js, que substituiu check-availability.js).
+// Os quatro fica no mesmo arquivo de propósito: a Vercel, no plano
+// gratuito, limita a 12 funções serverless por deploy — juntar esses
+// endpoints evita passar do limite (veja também check-availability-batch.js,
+// que substituiu check-availability.js).
 
 import { createClient } from "@supabase/supabase-js";
 import { verifyToken } from "./_auth.js";
@@ -32,7 +37,7 @@ export default async function handler(req, res) {
     const auth = verifyToken(req, process.env.ADMIN_SECRET, "admin");
 
     if (!supabaseUrl || !serviceKey) {
-      return res.status(200).json(auth ? { prices: [] } : { prices: defaults });
+      return res.status(200).json(auth ? { prices: [], blockedDates: [] } : { prices: defaults });
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
       .select("tour_id, price, max_quadriciclos, updated_at");
 
     if (error) {
-      return res.status(200).json(auth ? { prices: [] } : { prices: defaults });
+      return res.status(200).json(auth ? { prices: [], blockedDates: [] } : { prices: defaults });
     }
 
     // Modo público (sem token válido): só o mapa simples de preços atuais.
@@ -66,7 +71,20 @@ export default async function handler(req, res) {
         isDefaultSlots: !row || row.max_quadriciclos == null,
       };
     });
-    return res.status(200).json({ prices });
+
+    const { data: blocked } = await supabase
+      .from("blocked_dates")
+      .select("id, tour_id, date")
+      .order("date", { ascending: true });
+
+    const blockedDates = (blocked || []).map((b) => ({
+      id: b.id,
+      tourId: b.tour_id,
+      tourName: TOURS.find((t) => t.id === b.tour_id)?.name || b.tour_id,
+      date: b.date,
+    }));
+
+    return res.status(200).json({ prices, blockedDates });
   }
 
   if (req.method === "PATCH") {
@@ -135,6 +153,57 @@ export default async function handler(req, res) {
 
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ tourPrice: data });
+  }
+
+  if (req.method === "POST") {
+    const auth = verifyToken(req, process.env.ADMIN_SECRET, "admin");
+    if (!auth) {
+      return res.status(401).json({ error: "Sessão inválida ou expirada. Faça login novamente." });
+    }
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(500).json({ error: "Banco de dados não configurado." });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { tourId, date } = req.body;
+
+    const tour = TOURS.find((t) => t.id === tourId);
+    if (!tourId || !tour) {
+      return res.status(400).json({ error: "Passeio inválido" });
+    }
+    // Formato ISO simples (2026-09-05) — mesmo formato usado em booking_date.
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: "Data inválida" });
+    }
+
+    const { data, error } = await supabase
+      .from("blocked_dates")
+      .upsert({ tour_id: tourId, date }, { onConflict: "tour_id,date" })
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ blockedDate: data });
+  }
+
+  if (req.method === "DELETE") {
+    const auth = verifyToken(req, process.env.ADMIN_SECRET, "admin");
+    if (!auth) {
+      return res.status(401).json({ error: "Sessão inválida ou expirada. Faça login novamente." });
+    }
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(500).json({ error: "Banco de dados não configurado." });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { id } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: "id é obrigatório" });
+    }
+
+    const { error } = await supabase.from("blocked_dates").delete().eq("id", id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: "Método não permitido" });

@@ -10,6 +10,7 @@ import { TOURS } from "../src/data.js";
 import { isPastSameDayCutoff } from "./_brazilTime.js";
 import { expireStalePendingBookingsBatch } from "./_bookingExpiry.js";
 import { getMaxQuadriciclos } from "./_slots.js";
+import { getBlockedDatesSet } from "./_blockedDates.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -54,6 +55,11 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, serviceKey);
   const maxQuadriciclos = await getMaxQuadriciclos(supabase, tour || { maxQuadriciclos: queryFallback, id: tourId });
 
+  // Datas em que o Sid bloqueou manualmente a venda desse passeio (aba
+  // PREÇOS do /admin) — tratadas como esgotadas, mas sinalizadas à parte
+  // pra tela poder mostrar uma mensagem diferente de "lotado".
+  const manuallyBlocked = await getBlockedDatesSet(supabase, tourId, dateList);
+
   // Libera de volta pra venda qualquer reserva pendente há mais de 20min
   // nessas datas, antes de contar quantas vagas já estão ocupadas.
   await expireStalePendingBookingsBatch(supabase, tourId, dateList);
@@ -74,7 +80,7 @@ export default async function handler(req, res) {
 
   const availability = {};
   for (const d of dateList) {
-    if (d === cutoffBlockedDate) {
+    if (d === cutoffBlockedDate || manuallyBlocked.has(d)) {
       availability[d] = 0;
       continue;
     }
@@ -82,5 +88,10 @@ export default async function handler(req, res) {
     availability[d] = Math.max(0, maxQuadriciclos - booked);
   }
 
-  return res.status(200).json({ availability, max: maxQuadriciclos, cutoffBlockedDate });
+  return res.status(200).json({
+    availability,
+    max: maxQuadriciclos,
+    cutoffBlockedDate,
+    manuallyBlockedDates: Array.from(manuallyBlocked),
+  });
 }
