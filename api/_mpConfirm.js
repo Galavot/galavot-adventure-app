@@ -17,6 +17,7 @@
 // verificação sempre acontece no servidor, direto com a API oficial).
 
 import { TOURS } from "../src/data.js";
+import { getMaxQuadriciclos } from "./_slots.js";
 
 // api/_mpConfirm.js
 //
@@ -200,7 +201,7 @@ async function applyStatus(supabase, bookingId, novoStatus, paymentId) {
   // RECUPERAÇÃO TARDIA: confere se a vaga ainda está livre antes de
   // confirmar — nesse meio tempo alguém pode ter comprado a mesma vaga.
   const tour = TOURS.find((t) => t.id === expired.tour_id);
-  const maxQuadriciclos = tour?.maxQuadriciclos || 5;
+  const maxQuadriciclos = await getMaxQuadriciclos(supabase, tour);
 
   const { count } = await supabase
     .from("bookings")

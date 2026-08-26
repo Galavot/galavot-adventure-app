@@ -17,6 +17,9 @@ export default function BookingDateTime() {
   const [availabilityMap, setAvailabilityMap] = useState({});
   const [checking, setChecking] = useState(true);
   const [cutoffBlockedDate, setCutoffBlockedDate] = useState(null);
+  // Vagas por turno vindas do servidor (fonte de verdade, editável no
+  // /admin) — só cai no valor fixo de data.js antes da 1ª resposta chegar.
+  const [maxSlots, setMaxSlots] = useState(tour?.maxQuadriciclos || 5);
 
   useEffect(() => {
     if (tour) setSelectedTime(tour.time);
@@ -33,6 +36,7 @@ export default function BookingDateTime() {
       const data = await res.json();
       setAvailabilityMap(data.availability || {});
       setCutoffBlockedDate(data.cutoffBlockedDate || null);
+      if (data.max) setMaxSlots(data.max);
     } catch (err) {
       // Se a checagem falhar, não bloqueia o cliente — assume tudo disponível
       const fallback = {};
@@ -121,10 +125,10 @@ export default function BookingDateTime() {
           ) : selectedAvailable !== undefined ? (
             <>
               <span className="text-[12px] text-cream">
-                Vagas disponíveis nesse dia ({tour.maxQuadriciclos} quadriciclos/turno)
+                Vagas disponíveis nesse dia ({maxSlots} quadriciclos/turno)
               </span>
               <span className={`font-display text-base ${esgotado ? "text-[#ef4444]" : "text-white"}`}>
-                {esgotado ? (isCutoff ? "ENCERRADO" : "ESGOTADO") : `${selectedAvailable} de ${tour.maxQuadriciclos}`}
+                {esgotado ? (isCutoff ? "ENCERRADO" : "ESGOTADO") : `${selectedAvailable} de ${maxSlots}`}
               </span>
             </>
           ) : null}

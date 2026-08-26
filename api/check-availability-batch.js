@@ -9,6 +9,7 @@ import { createClient } from "@supabase/supabase-js";
 import { TOURS } from "../src/data.js";
 import { isPastSameDayCutoff } from "./_brazilTime.js";
 import { expireStalePendingBookingsBatch } from "./_bookingExpiry.js";
+import { getMaxQuadriciclos } from "./_slots.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -19,12 +20,16 @@ export default async function handler(req, res) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   const { tourId, max, dates } = req.query;
-  const maxQuadriciclos = Number(max) || 5;
   const tour = TOURS.find((t) => t.id === tourId);
 
   if (!tourId || !dates) {
     return res.status(400).json({ error: "tourId e dates são obrigatórios" });
   }
+
+  // O número de vagas por turno é sempre reconferido no banco (aba PREÇOS
+  // do /admin) — o "max" que vem na query é só um fallback pra quando o
+  // banco está fora do ar, nunca a fonte de verdade.
+  const queryFallback = Number(max) || tour?.maxQuadriciclos || 5;
 
   const dateList = String(dates)
     .split(",")
@@ -41,12 +46,13 @@ export default async function handler(req, res) {
   if (!supabaseUrl || !serviceKey) {
     const fallback = {};
     dateList.forEach((d) => {
-      fallback[d] = d === cutoffBlockedDate ? 0 : maxQuadriciclos;
+      fallback[d] = d === cutoffBlockedDate ? 0 : queryFallback;
     });
-    return res.status(200).json({ availability: fallback, max: maxQuadriciclos, cutoffBlockedDate });
+    return res.status(200).json({ availability: fallback, max: queryFallback, cutoffBlockedDate });
   }
 
   const supabase = createClient(supabaseUrl, serviceKey);
+  const maxQuadriciclos = await getMaxQuadriciclos(supabase, tour || { maxQuadriciclos: queryFallback, id: tourId });
 
   // Libera de volta pra venda qualquer reserva pendente há mais de 20min
   // nessas datas, antes de contar quantas vagas já estão ocupadas.

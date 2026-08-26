@@ -3,8 +3,12 @@
 // GET (sem token)  -> modo público: devolve só { prices: { matinal: 350, ... } }
 //                     usado pelo site pra saber o preço atual de cada passeio
 // GET (com token admin) -> modo admin: devolve lista detalhada (nome, preço,
-//                     se é o padrão, quando foi atualizado) pra tela de edição
-// PATCH (com token admin) -> atualiza o preço de um passeio (ex: promoção)
+//                     vagas por turno, se é o padrão, quando foi atualizado)
+//                     pra tela de edição
+// PATCH (com token admin) -> atualiza o preço E/OU o número de vagas
+//                     (quadriciclos) por turno de um passeio. Manda só o
+//                     campo que quer mudar (price ou maxQuadriciclos) — o
+//                     outro fica como já estava.
 //
 // Os dois modos ficam no mesmo arquivo de propósito: a Vercel, no plano
 // gratuito, limita a 12 funções serverless por deploy — juntar esse
@@ -32,7 +36,9 @@ export default async function handler(req, res) {
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
-    const { data, error } = await supabase.from("tour_prices").select("tour_id, price, updated_at");
+    const { data, error } = await supabase
+      .from("tour_prices")
+      .select("tour_id, price, max_quadriciclos, updated_at");
 
     if (error) {
       return res.status(200).json(auth ? { prices: [] } : { prices: defaults });
@@ -54,8 +60,10 @@ export default async function handler(req, res) {
         tourId: t.id,
         tourName: t.name,
         price: row ? Number(row.price) : t.price,
+        maxQuadriciclos: row?.max_quadriciclos != null ? Number(row.max_quadriciclos) : t.maxQuadriciclos || 5,
         updatedAt: row?.updated_at || null,
         isDefault: !row,
+        isDefaultSlots: !row || row.max_quadriciclos == null,
       };
     });
     return res.status(200).json({ prices });
@@ -71,19 +79,57 @@ export default async function handler(req, res) {
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
-    const { tourId, price } = req.body;
-    const numericPrice = Number(price);
+    const { tourId, price, maxQuadriciclos } = req.body;
 
-    if (!tourId || !TOURS.find((t) => t.id === tourId)) {
+    const tour = TOURS.find((t) => t.id === tourId);
+    if (!tourId || !tour) {
       return res.status(400).json({ error: "Passeio inválido" });
     }
-    if (!numericPrice || numericPrice <= 0) {
-      return res.status(400).json({ error: "Preço inválido" });
+
+    // Aceita mudar só o preço, só as vagas, ou os dois juntos — o que não
+    // vier no body mantém o valor atual (upsert com onConflict preenche o
+    // resto a partir do que já existe na tabela, então só incluímos aqui
+    // os campos que de fato vieram na requisição).
+    const hasPrice = price !== undefined && price !== null && price !== "";
+    const hasSlots = maxQuadriciclos !== undefined && maxQuadriciclos !== null && maxQuadriciclos !== "";
+
+    if (!hasPrice && !hasSlots) {
+      return res.status(400).json({ error: "Nada pra atualizar" });
+    }
+
+    const update = { tour_id: tourId, updated_at: new Date().toISOString() };
+
+    if (hasPrice) {
+      const numericPrice = Number(price);
+      if (!numericPrice || numericPrice <= 0) {
+        return res.status(400).json({ error: "Preço inválido" });
+      }
+      update.price = numericPrice;
+    }
+
+    if (hasSlots) {
+      const numericSlots = Number(maxQuadriciclos);
+      if (!Number.isInteger(numericSlots) || numericSlots < 0 || numericSlots > 50) {
+        return res.status(400).json({ error: "Número de vagas inválido" });
+      }
+      update.max_quadriciclos = numericSlots;
+    }
+
+    // Se só um dos dois campos veio, precisa manter o outro como já
+    // estava na tabela (senão o upsert gravaria NULL nele).
+    if (!hasPrice || !hasSlots) {
+      const { data: existing } = await supabase
+        .from("tour_prices")
+        .select("price, max_quadriciclos")
+        .eq("tour_id", tourId)
+        .single();
+      if (!hasPrice) update.price = existing?.price ?? tour.price;
+      if (!hasSlots) update.max_quadriciclos = existing?.max_quadriciclos ?? (tour.maxQuadriciclos || 5);
     }
 
     const { data, error } = await supabase
       .from("tour_prices")
-      .upsert({ tour_id: tourId, price: numericPrice, updated_at: new Date().toISOString() }, { onConflict: "tour_id" })
+      .upsert(update, { onConflict: "tour_id" })
       .select()
       .single();
 

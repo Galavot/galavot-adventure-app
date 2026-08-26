@@ -46,6 +46,7 @@ import { checkPendingBookingDirectly } from "./_mpConfirm.js";
 import { getClientIp as getRateLimitIp, checkRateLimit, registerFailedAttempt } from "./_rateLimit.js";
 import { isPastSameDayCutoff } from "./_brazilTime.js";
 import { expireStalePendingBookings } from "./_bookingExpiry.js";
+import { getMaxQuadriciclos } from "./_slots.js";
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -204,7 +205,9 @@ export default async function handler(req, res) {
 
   const plan = paymentPlan === "vista" ? "vista" : "sinal";
   const tourName = tour.name;
-  const maxQuadriciclos = tour.maxQuadriciclos || 5;
+  // Vagas por turno ATUAIS (pode ter sido alterado no /admin, aba PREÇOS —
+  // ex: quadriciclo novo aumentando vaga, ou um em manutenção reduzindo).
+  const maxQuadriciclos = await getMaxQuadriciclos(supabase, tour);
 
   // Corte de reserva de última hora: pro passeio de HOJE, não aceita mais
   // reserva depois do horário limite (mesmo que ainda tenha vaga), pra não
