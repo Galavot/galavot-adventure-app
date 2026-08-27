@@ -87,6 +87,9 @@ export async function sendConfirmationEmail(booking) {
     `Reserva confirmada — código ${booking.booking_code}`,
     `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 8px;">
+          <img src="https://galavotadventure.com.br/logo.png" alt="Galavot Adventure" width="100" style="display: inline-block; border-radius: 50%;" />
+        </div>
         <h2 style="color: #F2600C;">Tudo pronto pra aventura!</h2>
         <p>Seu pagamento foi confirmado. Guarde esse código, ele autoriza seu embarque no dia do passeio:</p>
         <div style="background: #151311; color: #F2600C; font-family: monospace; font-size: 22px; font-weight: bold; padding: 16px; border-radius: 8px; text-align: center; margin: 16px 0;">
@@ -114,6 +117,9 @@ async function sendConflictEmail(booking) {
     `Sobre sua reserva ${booking.booking_code} — precisamos falar com você`,
     `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 8px;">
+          <img src="https://galavotadventure.com.br/logo.png" alt="Galavot Adventure" width="100" style="display: inline-block; border-radius: 50%;" />
+        </div>
         <h2 style="color: #F2600C;">Recebemos seu pagamento</h2>
         <p>Identificamos seu pagamento da reserva <strong>${booking.booking_code}</strong>, mas o horário escolhido
         (${booking.tour_name}, ${booking.booking_date} às ${booking.booking_time}) já não tem mais vaga disponível —
