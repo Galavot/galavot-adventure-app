@@ -33,11 +33,17 @@ export default async function handler(req, res) {
   if (error) return res.status(500).json({ error: error.message });
 
   const bookings = data || [];
+  // Só conta comissão de reserva que realmente foi paga pelo cliente
+  // (status "confirmado" ou "concluido"). Reserva que ficou aguardando
+  // pagamento, teve o pagamento recusado, ou está em conflito de vaga
+  // ainda não resolvido, NÃO gera comissão — mesmo que já tenha um valor
+  // calculado guardado no banco desde a criação.
+  const PAGO_DE_VERDADE = ["confirmado", "concluido"];
   const pendente = bookings
-    .filter((b) => !b.comissao_paga && b.status !== "cancelado")
+    .filter((b) => !b.comissao_paga && PAGO_DE_VERDADE.includes(b.status))
     .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
   const pago = bookings
-    .filter((b) => b.comissao_paga)
+    .filter((b) => b.comissao_paga && PAGO_DE_VERDADE.includes(b.status))
     .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
 
   return res.status(200).json({ bookings, comissaoPendente: pendente, comissaoPaga: pago });

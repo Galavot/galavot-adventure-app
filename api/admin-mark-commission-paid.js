@@ -32,7 +32,9 @@ export default async function handler(req, res) {
     .update({ comissao_paga: true })
     .eq("partner_id", partnerId)
     .eq("comissao_paga", false)
-    .neq("status", "cancelado")
+    // Só marca como paga comissão de reserva que realmente foi paga pelo
+    // cliente — nunca de reserva pendente, recusada ou cancelada.
+    .in("status", ["confirmado", "concluido"])
     .select();
 
   if (error) return res.status(500).json({ error: error.message });

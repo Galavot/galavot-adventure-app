@@ -41,7 +41,9 @@ export default function AdminPartners({ bookings }) {
   }, [loadPartners]);
 
   const commissionFor = (partnerId) => {
-    const partnerBookings = bookings.filter((b) => b.partner_id === partnerId && b.status !== "cancelado");
+    // Mesma regra do painel do parceiro: só conta reserva realmente paga.
+    const PAGO_DE_VERDADE = ["confirmado", "concluido"];
+    const partnerBookings = bookings.filter((b) => b.partner_id === partnerId && PAGO_DE_VERDADE.includes(b.status));
     const pendente = partnerBookings
       .filter((b) => !b.comissao_paga)
       .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
