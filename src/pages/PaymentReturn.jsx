@@ -105,23 +105,6 @@ export default function PaymentReturn() {
     year: "numeric",
   });
 
-  const restante = payment_plan === "sinal" ? total - valor_pago_inicial : 0;
-  const pagamentoTexto =
-    payment_plan === "vista"
-      ? `Pagamento à vista: R$ ${total} (pago)`
-      : `Sinal de R$ ${valor_pago_inicial} pago (50%), restante R$ ${restante} no embarque`;
-
-  const whatsappMessage = encodeURIComponent(
-    `Olá! Minha reserva ${booking_code} foi paga:\n\n` +
-      `Passeio: ${tour_name}\n` +
-      `Data: ${dateLabel}\n` +
-      `Horário: ${booking_time}\n` +
-      `Pessoas: ${participants}\n` +
-      `Pagamento: ${METHOD_LABELS[payment_method] || payment_method} — ${pagamentoTexto}\n\n` +
-      `Ponto de encontro: ${CONTACT.meetingPoint.address}\n${CONTACT.meetingPoint.mapsUrl}\n\n` +
-      `Aguardo confirmação!`
-  );
-
   if (status === "pagamento_recusado") {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-charcoal text-center px-6">
@@ -212,27 +195,18 @@ export default function PaymentReturn() {
           <span className="font-display text-ink text-[15px]">COMO CHEGAR</span>
         </a>
 
-        <a
-          href={`https://wa.me/${CONTACT.whatsapp}?text=${whatsappMessage}`}
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-center gap-2 rounded-lg py-3 mt-3 bg-moss"
-        >
-          <Phone size={16} color="#fff" />
-          <span className="font-display text-white text-[15px]">ENVIAR RESERVA PRO WHATSAPP</span>
-        </a>
-        <p className="text-[10px] text-muted text-center mt-2 px-4">
-          Toque no botão acima para confirmar sua reserva com a equipe pelo WhatsApp.
+        <p className="text-[11px] text-cream text-center mt-4 px-4">
+          Veja sua reserva {dateLabel} · {booking_time} na aba Reservas do app.
         </p>
       </div>
 
       <div className="px-4 pb-6 mt-auto w-full pt-6">
         <PrimaryButton
           onClick={() =>
-            navigate(sessionStorage.getItem("galavot_partner_token") ? "/parceiro/painel" : "/")
+            navigate(sessionStorage.getItem("galavot_partner_token") ? "/parceiro/painel" : "/reservas")
           }
         >
-          {sessionStorage.getItem("galavot_partner_token") ? "VOLTAR AO PAINEL" : "VOLTAR AO INÍCIO"}
+          {sessionStorage.getItem("galavot_partner_token") ? "VOLTAR AO PAINEL" : "VER MINHAS RESERVAS"}
         </PrimaryButton>
       </div>
     </div>

@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "POST") {
-    const { nome, empresa, codigo, senha, comissaoPercentual } = req.body;
+    const { nome, empresa, codigo, senha, comissaoPercentual, whatsapp } = req.body;
     if (!nome || !codigo || !senha) {
       return res.status(400).json({ error: "Nome, código e senha são obrigatórios" });
     }
@@ -51,6 +51,7 @@ export default async function handler(req, res) {
         codigo: codigo.trim(),
         senha_hash,
         comissao_percentual: comissaoPercentual || 10,
+        whatsapp: whatsapp ? whatsapp.replace(/\D/g, "") : null,
         ativo: true,
       })
       .select()
@@ -62,11 +63,17 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "PATCH") {
-    const { id, ativo } = req.body;
-    if (!id || typeof ativo !== "boolean") {
-      return res.status(400).json({ error: "id e ativo são obrigatórios" });
+    const { id, ativo, whatsapp } = req.body;
+    if (!id) return res.status(400).json({ error: "id é obrigatório" });
+
+    const updates = {};
+    if (typeof ativo === "boolean") updates.ativo = ativo;
+    if (whatsapp !== undefined) updates.whatsapp = whatsapp ? whatsapp.replace(/\D/g, "") : null;
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "Nada para atualizar" });
     }
-    const { data, error } = await supabase.from("partners").update({ ativo }).eq("id", id).select().single();
+
+    const { data, error } = await supabase.from("partners").update(updates).eq("id", id).select().single();
     if (error) return res.status(500).json({ error: error.message });
     const { senha_hash: _omit, ...partner } = data;
     return res.status(200).json({ partner });

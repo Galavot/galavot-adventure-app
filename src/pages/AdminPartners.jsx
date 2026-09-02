@@ -9,7 +9,7 @@ export default function AdminPartners({ bookings }) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [form, setForm] = useState({ nome: "", empresa: "", codigo: "", senha: "", comissaoPercentual: 10 });
+  const [form, setForm] = useState({ nome: "", empresa: "", codigo: "", senha: "", comissaoPercentual: 10, whatsapp: "" });
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -55,7 +55,7 @@ export default function AdminPartners({ bookings }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao criar parceiro");
-      setForm({ nome: "", empresa: "", codigo: "", senha: "", comissaoPercentual: 10 });
+      setForm({ nome: "", empresa: "", codigo: "", senha: "", comissaoPercentual: 10, whatsapp: "" });
       setShowForm(false);
       loadPartners();
     } catch (err) {
@@ -142,6 +142,17 @@ export default function AdminPartners({ bookings }) {
           />
           <input
             required
+            type="tel"
+            placeholder="WhatsApp fixo do parceiro (27) 9 9999-9999"
+            value={form.whatsapp}
+            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+            className="rounded-lg px-3 py-2 bg-ink border border-hline text-white text-[13px] placeholder:text-muted outline-none"
+          />
+          <p className="text-[10px] text-muted -mt-1">
+            Usado como contato padrão quando o parceiro reservar sem ter o WhatsApp do cliente na hora.
+          </p>
+          <input
+            required
             placeholder="Código de acesso (ex: HOTEL01)"
             value={form.codigo}
             onChange={(e) => setForm({ ...form, codigo: e.target.value })}
@@ -186,6 +197,7 @@ export default function AdminPartners({ bookings }) {
                 <div className="text-[11px] text-muted mt-0.5">
                   {p.empresa ? `${p.empresa} · ` : ""}código: {p.codigo}
                 </div>
+                {p.whatsapp && <div className="text-[11px] text-muted mt-0.5">zap: {p.whatsapp}</div>}
               </div>
               <button
                 onClick={() => toggleAtivo(p)}

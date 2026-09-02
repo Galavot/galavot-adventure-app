@@ -15,8 +15,15 @@ export default function BookingCustomer() {
   const [viewedManual, setViewedManual] = useState(false);
   const [viewedTermo, setViewedTermo] = useState(false);
 
+  const partnerName = sessionStorage.getItem("galavot_partner_name");
+  const isPartnerFlow = Boolean(sessionStorage.getItem("galavot_partner_token"));
+
   const nameValid = isValidCustomerName(customer.name);
-  const phoneValid = isValidPhoneNumber(customer.phone);
+  // Reservando como parceiro, o WhatsApp do cliente é opcional — se não
+  // souber na hora, a reserva usa o WhatsApp fixo do parceiro (cadastrado
+  // no ADM) como contato, e o código pode ser redirecionado pro cliente
+  // depois, pelo painel do parceiro.
+  const phoneValid = isPartnerFlow ? customer.phone.trim() === "" || isValidPhoneNumber(customer.phone) : isValidPhoneNumber(customer.phone);
   const emailValid = customer.email.trim() === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email.trim());
   const docsViewed = viewedManual && viewedTermo;
   const canContinue = nameValid && phoneValid && emailValid && customer.accepted && docsViewed;
@@ -45,11 +52,20 @@ export default function BookingCustomer() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal flex flex-col">
-      <TopBar title="SEUS DADOS" showBack />
+      <TopBar title={isPartnerFlow ? "DADOS DO CLIENTE" : "SEUS DADOS"} showBack />
       <TrailProgress step={3} total={4} />
       <div className="px-4 flex flex-col gap-4">
+        {isPartnerFlow && (
+          <div className="rounded-lg px-4 py-3 bg-stone border border-orange">
+            <p className="text-[11px] text-cream leading-relaxed">
+              Você está reservando como parceiro <span className="text-orange font-semibold">{partnerName}</span>.
+              Preencha os dados de quem vai participar do passeio.
+            </p>
+          </div>
+        )}
+
         <div>
-          <label className="text-[11px] font-semibold text-muted">NOME COMPLETO</label>
+          <label className="text-[11px] font-semibold text-muted">NOME COMPLETO DO CLIENTE</label>
           <input
             type="text"
             value={customer.name}
@@ -58,12 +74,14 @@ export default function BookingCustomer() {
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
           {touched && !nameValid && (
-            <p className="text-[11px] text-[#ef4444] mt-1">Informe seu nome completo (nome e sobrenome).</p>
+            <p className="text-[11px] text-[#ef4444] mt-1">Informe o nome completo do cliente (nome e sobrenome).</p>
           )}
         </div>
 
         <div>
-          <label className="text-[11px] font-semibold text-muted">WHATSAPP</label>
+          <label className="text-[11px] font-semibold text-muted">
+            WHATSAPP DO CLIENTE {isPartnerFlow && "(OPCIONAL)"}
+          </label>
           <input
             type="tel"
             value={customer.phone}
@@ -71,6 +89,11 @@ export default function BookingCustomer() {
             placeholder="(27) 9 9999-9999"
             className="w-full mt-1 rounded-lg px-4 py-3 bg-stone border border-hline text-white placeholder:text-muted outline-none focus:border-orange"
           />
+          {isPartnerFlow && (
+            <p className="text-[10px] text-muted mt-1">
+              Se não souber agora, deixe em branco — dá pra mandar o código pro zap certo do painel depois.
+            </p>
+          )}
           {touched && !phoneValid && (
             <p className="text-[11px] text-[#ef4444] mt-1">Informe um WhatsApp válido, com DDD.</p>
           )}
@@ -154,8 +177,9 @@ export default function BookingCustomer() {
             className="mt-0.5 accent-orange"
           />
           <span className="text-[12px] text-cream leading-relaxed">
-            Declaro que li o Manual de Pilotagem Segura e o Termo de Responsabilidade acima, estou ciente dos
-            riscos da atividade e concordo com os termos, que serão assinados no check-in presencial.
+            {isPartnerFlow
+              ? "Declaro que informei ao cliente sobre o Manual de Pilotagem Segura e o Termo de Responsabilidade acima, e que ele está ciente dos riscos da atividade — os termos serão assinados por ele no check-in presencial."
+              : "Declaro que li o Manual de Pilotagem Segura e o Termo de Responsabilidade acima, estou ciente dos riscos da atividade e concordo com os termos, que serão assinados no check-in presencial."}
           </span>
         </label>
         {touched && docsViewed && !customer.accepted && (

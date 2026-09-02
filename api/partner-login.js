@@ -60,6 +60,12 @@ export default async function handler(req, res) {
   const token = issueToken({ role: "partner", id: partner.id }, adminSecret);
   return res.status(200).json({
     token,
-    partner: { id: partner.id, nome: partner.nome, empresa: partner.empresa, comissao_percentual: partner.comissao_percentual },
+    partner: {
+      id: partner.id,
+      nome: partner.nome,
+      empresa: partner.empresa,
+      comissao_percentual: partner.comissao_percentual,
+      whatsapp: partner.whatsapp || null,
+    },
   });
 }

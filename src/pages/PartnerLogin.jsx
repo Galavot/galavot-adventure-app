@@ -25,6 +25,11 @@ export default function PartnerLogin() {
       sessionStorage.setItem("galavot_partner_token", data.token);
       sessionStorage.setItem("galavot_partner_id", data.partner.id);
       sessionStorage.setItem("galavot_partner_name", data.partner.nome);
+      if (data.partner.whatsapp) {
+        sessionStorage.setItem("galavot_partner_whatsapp", data.partner.whatsapp);
+      } else {
+        sessionStorage.removeItem("galavot_partner_whatsapp");
+      }
       navigate("/parceiro/painel");
     } catch (err) {
       setError(err.message);

@@ -193,7 +193,33 @@ export default async function handler(req, res) {
   if (!isValidCustomerName(customerName)) {
     return res.status(400).json({ error: "Informe um nome completo válido (nome e sobrenome)." });
   }
-  if (!isValidPhoneNumber(customerPhone)) {
+
+  // Se é o parceiro reservando, já busca os dados dele (comissão +
+  // WhatsApp fixo) numa única consulta — usados mais abaixo.
+  let partnerRow = null;
+  if (partnerId) {
+    const { data } = await supabase
+      .from("partners")
+      .select("comissao_percentual, whatsapp")
+      .eq("id", partnerId)
+      .single();
+    partnerRow = data || null;
+  }
+
+  // Quando é o parceiro reservando, o WhatsApp do cliente é opcional: se
+  // vier vazio/incompleto, usamos o WhatsApp fixo cadastrado pra esse
+  // parceiro no ADM como contato provisório da reserva. Sem parceiro, o
+  // WhatsApp do próprio cliente continua obrigatório.
+  let finalCustomerPhone = customerPhone;
+  if (partnerId && !isValidPhoneNumber(customerPhone)) {
+    if (partnerRow?.whatsapp) {
+      finalCustomerPhone = partnerRow.whatsapp;
+    } else {
+      return res.status(400).json({
+        error: "Esse parceiro ainda não tem um WhatsApp cadastrado no ADM. Cadastre um ou informe o WhatsApp do cliente.",
+      });
+    }
+  } else if (!isValidPhoneNumber(customerPhone)) {
     return res.status(400).json({ error: "Informe um WhatsApp válido, com DDD." });
   }
 
@@ -263,12 +289,7 @@ export default async function handler(req, res) {
 
   let comissaoValor = null;
   if (partnerId) {
-    const { data: partner } = await supabase
-      .from("partners")
-      .select("comissao_percentual")
-      .eq("id", partnerId)
-      .single();
-    const percentual = partner?.comissao_percentual ?? 10;
+    const percentual = partnerRow?.comissao_percentual ?? 10;
     comissaoValor = Math.round(total * (percentual / 100) * 100) / 100;
   }
 
@@ -282,7 +303,7 @@ export default async function handler(req, res) {
       booking_time: time,
       participants,
       customer_name: customerName,
-      customer_phone: customerPhone,
+      customer_phone: finalCustomerPhone,
       customer_email: customerEmail || null,
       payment_method: method,
       payment_plan: plan,
