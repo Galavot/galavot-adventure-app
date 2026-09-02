@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { UserPlus, Wallet, Power, Trash2 } from "lucide-react";
+import { UserPlus, Wallet, Power, Trash2, Pencil, Check, X } from "lucide-react";
 import { PrimaryButton } from "../components/UI.jsx";
 
 export default function AdminPartners({ bookings }) {
@@ -10,6 +10,12 @@ export default function AdminPartners({ bookings }) {
   const [saving, setSaving] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [form, setForm] = useState({ nome: "", empresa: "", codigo: "", senha: "", comissaoPercentual: 10, whatsapp: "" });
+  // id do parceiro cujo WhatsApp está sendo editado agora, e o valor
+  // digitado nesse campo — só um por vez, guardado fora da lista de
+  // parceiros pra não precisar mexer no objeto inteiro a cada tecla.
+  const [editingWhatsappId, setEditingWhatsappId] = useState(null);
+  const [whatsappDraft, setWhatsappDraft] = useState("");
+  const [savingWhatsapp, setSavingWhatsapp] = useState(false);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -75,6 +81,37 @@ export default function AdminPartners({ bookings }) {
       loadPartners();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const startEditWhatsapp = (partner) => {
+    setEditingWhatsappId(partner.id);
+    setWhatsappDraft(partner.whatsapp || "");
+  };
+
+  const cancelEditWhatsapp = () => {
+    setEditingWhatsappId(null);
+    setWhatsappDraft("");
+  };
+
+  const saveWhatsapp = async (partnerId) => {
+    setSavingWhatsapp(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-partners", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ id: partnerId, whatsapp: whatsappDraft }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao salvar WhatsApp");
+      setEditingWhatsappId(null);
+      setWhatsappDraft("");
+      loadPartners();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingWhatsapp(false);
     }
   };
 
@@ -197,7 +234,43 @@ export default function AdminPartners({ bookings }) {
                 <div className="text-[11px] text-muted mt-0.5">
                   {p.empresa ? `${p.empresa} · ` : ""}código: {p.codigo}
                 </div>
-                {p.whatsapp && <div className="text-[11px] text-muted mt-0.5">zap: {p.whatsapp}</div>}
+                {editingWhatsappId === p.id ? (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <input
+                      autoFocus
+                      type="tel"
+                      value={whatsappDraft}
+                      onChange={(e) => setWhatsappDraft(e.target.value)}
+                      placeholder="(27) 9 9999-9999"
+                      className="rounded-lg px-2 py-1 bg-ink border border-hline text-white text-[11px] placeholder:text-muted outline-none w-[140px]"
+                    />
+                    <button
+                      onClick={() => saveWhatsapp(p.id)}
+                      disabled={savingWhatsapp}
+                      aria-label="Salvar WhatsApp"
+                      className="w-6 h-6 flex items-center justify-center rounded-md bg-moss"
+                    >
+                      <Check size={12} color="#fff" />
+                    </button>
+                    <button
+                      onClick={cancelEditWhatsapp}
+                      aria-label="Cancelar edição"
+                      className="w-6 h-6 flex items-center justify-center rounded-md bg-ink border border-hline"
+                    >
+                      <X size={12} color="#B7AFA2" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => startEditWhatsapp(p)}
+                    className="flex items-center gap-1 mt-0.5"
+                  >
+                    <span className="text-[11px] text-muted">
+                      {p.whatsapp ? `zap: ${p.whatsapp}` : "zap: não cadastrado"}
+                    </span>
+                    <Pencil size={10} color="#B7AFA2" />
+                  </button>
+                )}
               </div>
               <button
                 onClick={() => toggleAtivo(p)}
