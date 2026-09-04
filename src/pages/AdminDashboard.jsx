@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck, Mail } from "lucide-react";
+import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck, Mail, FileSpreadsheet } from "lucide-react";
 import { Pill } from "../components/UI.jsx";
 import AdminPartners from "./AdminPartners.jsx";
 import AdminGuides from "./AdminGuides.jsx";
@@ -25,8 +25,24 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("todos");
+  const [partners, setPartners] = useState([]);
+  const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7)); // "AAAA-MM"
+  const [exporting, setExporting] = useState(false);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
+
+  const loadPartnersForReport = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch("/api/admin-partners", { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (res.ok) setPartners(data.partners || []);
+    } catch {
+      // Não bloqueia a tela por causa disso — na pior das hipóteses o
+      // relatório sai sem o nome do parceiro preenchido.
+    }
+  }, []);
 
   const loadBookings = useCallback(async () => {
     setLoading(true);
@@ -57,7 +73,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadBookings();
-  }, [loadBookings]);
+    loadPartnersForReport();
+  }, [loadBookings, loadPartnersForReport]);
 
   const updateStatus = async (id, status) => {
     const token = getToken();
@@ -80,6 +97,29 @@ export default function AdminDashboard() {
   };
 
   const filtered = filter === "todos" ? bookings : bookings.filter((b) => b.status === filter);
+
+  const partnerNamesById = new Map(partners.map((p) => [p.id, p.nome]));
+
+  const handleExport = async (scope) => {
+    setExporting(true);
+    try {
+      let toExport = bookings;
+      let monthLabel = "todos-os-periodos";
+      if (scope === "mes") {
+        toExport = bookings.filter((b) => (b.booking_date || "").startsWith(reportMonth));
+        monthLabel = reportMonth;
+      }
+      // Import dinâmico: o exceljs só é baixado quando alguém realmente
+      // clica em exportar, aqui no admin. Assim o cliente comum, que só
+      // navega e reserva passeios, nunca carrega essa biblioteca à toa.
+      const { exportBookingsReport } = await import("../utils/exportBookingsReport.js");
+      await exportBookingsReport(toExport, { partnerNamesById, monthLabel });
+    } catch (err) {
+      setError("Erro ao gerar o relatório: " + err.message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto bg-charcoal">
@@ -132,6 +172,35 @@ export default function AdminDashboard() {
               </button>
             ))}
           </div>
+
+          <div className="flex items-center gap-2 px-4 pt-3 flex-wrap">
+            <FileSpreadsheet size={14} color="#B7AFA2" />
+            <span className="text-[11px] text-muted">Relatório Excel:</span>
+            <input
+              type="month"
+              value={reportMonth}
+              onChange={(e) => setReportMonth(e.target.value)}
+              className="rounded-lg px-2 py-1.5 bg-stone border border-hline text-white text-[11px] outline-none"
+            />
+            <button
+              onClick={() => handleExport("mes")}
+              disabled={exporting}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-50"
+            >
+              {exporting ? "Gerando..." : "Exportar mês"}
+            </button>
+            <button
+              onClick={() => handleExport("todos")}
+              disabled={exporting}
+              className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-stone text-cream border border-hline disabled:opacity-50"
+            >
+              Exportar tudo
+            </button>
+          </div>
+          <p className="text-[10px] text-muted px-4 pt-1">
+            O Excel sai com todos os status (aguardando, confirmado, cancelado etc.) e um filtro já
+            ativado em cada coluna — é só escolher o que quer ver direto na planilha.
+          </p>
 
           <div className="px-4 py-4 flex flex-col gap-3">
             {loading && <p className="text-muted text-sm text-center mt-8">Carregando...</p>}
