@@ -78,7 +78,14 @@ export function getUpcomingDates(days = 6) {
     d.setDate(today.getDate() + i);
     const label = i === 0 ? "HOJE" : i === 1 ? "AMANHÃ" : WEEKDAYS[d.getDay()];
     const sub = `${String(d.getDate()).padStart(2, "0")} ${MONTHS[d.getMonth()]}`;
-    const iso = d.toISOString().slice(0, 10);
+    // NUNCA use toISOString() aqui — ela converte pra UTC, e o Brasil é
+    // UTC-3. Entre ~21h e meia-noite (horário local), isso já teria virado
+    // o dia seguinte em UTC, fazendo o app mandar pro servidor uma data
+    // diferente da que está escrita no rótulo (ex: rótulo "HOJE 05 SET"
+    // mas iso enviado seria "2026-09-06"). Construindo a partir dos
+    // mesmos getFullYear/getMonth/getDate locais usados no rótulo acima,
+    // a data enviada sempre bate com o que a pessoa está vendo na tela.
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     result.push({ label, sub, iso });
   }
   return result;

@@ -26,7 +26,14 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("todos");
   const [partners, setPartners] = useState([]);
-  const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7)); // "AAAA-MM"
+  const [reportMonth, setReportMonth] = useState(() => {
+    // Não usar toISOString() aqui — ela converte pra UTC e, no fim do mês
+    // à noite (horário do Brasil), já mostraria o mês seguinte como
+    // padrão. Monta a partir de getFullYear/getMonth locais, que refletem
+    // o dia certo no fuso do Brasil.
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  }); // "AAAA-MM"
   const [exporting, setExporting] = useState(false);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
