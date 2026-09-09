@@ -34,7 +34,18 @@ export function isValidCustomerName(name) {
 }
 
 export function isValidPhoneNumber(phone) {
-  const digits = String(phone || "").replace(/\D/g, "");
+  const raw = String(phone || "");
+
+  // O texto digitado só pode ter dígitos e os separadores comuns de
+  // telefone (espaço, parênteses, hífen, "+" só no início pro código do
+  // país). Qualquer outra coisa — letra, "=", "@" — barra aqui, antes
+  // mesmo de contar dígitos. Isso fecha a porta pra alguém digitar algo
+  // tipo "=27987654321" como telefone só pra ter esse texto salvo cru no
+  // banco (o que viraria uma fórmula se um dia esse dado for aberto numa
+  // planilha, por exemplo no relatório do ADM).
+  if (!/^\+?[\d\s().-]+$/.test(raw)) return false;
+
+  const digits = raw.replace(/\D/g, "");
 
   // Telefone brasileiro: DDD (2 dígitos) + 8 ou 9 dígitos do número.
   if (digits.length < 10 || digits.length > 11) return false;

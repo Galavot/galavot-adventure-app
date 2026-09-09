@@ -41,6 +41,20 @@ function formatDateTimeBR(isoDateTime) {
   }
 }
 
+// Proteção contra "CSV/Excel Injection": nome, telefone e e-mail vêm de
+// texto que o próprio cliente digitou no formulário de reserva. Se algum
+// desses campos começar com =, +, - ou @, o Excel pode interpretar a
+// célula como uma FÓRMULA ao abrir o arquivo, em vez de texto puro — um
+// jeito conhecido de embutir comando malicioso numa planilha. Colocando
+// um apóstrofo na frente desses casos, o Excel trata como texto sempre,
+// sem mudar o que aparece pra quem lê a planilha.
+function sanitizeForExcel(value) {
+  if (value == null) return value;
+  const str = String(value);
+  if (/^[=+\-@]/.test(str)) return `'${str}`;
+  return str;
+}
+
 const COLUMNS = [
   { header: "Código", key: "booking_code", width: 12 },
   { header: "Status", key: "status_label", width: 20 },
@@ -90,16 +104,16 @@ export async function exportBookingsReport(bookings, { partnerNamesById = new Ma
       tour_name: b.tour_name || "",
       date_label: formatDateBR(b.booking_date),
       booking_time: b.booking_time || "",
-      customer_name: b.customer_name || "",
-      customer_phone: b.customer_phone || "",
-      customer_email: b.customer_email || "",
+      customer_name: sanitizeForExcel(b.customer_name || ""),
+      customer_phone: sanitizeForExcel(b.customer_phone || ""),
+      customer_email: sanitizeForExcel(b.customer_email || ""),
       participants: b.participants ?? "",
       total: Number(b.total || 0),
       payment_method_label: METHOD_LABELS[b.payment_method] || b.payment_method || "",
       payment_plan_label: b.payment_plan === "vista" ? "À vista" : b.payment_plan === "sinal" ? "Sinal 50%" : "",
       valor_pago_inicial: b.valor_pago_inicial != null ? Number(b.valor_pago_inicial) : "",
       restante: b.payment_plan === "sinal" ? restante : "",
-      partner_name: b.partner_id ? partnerNamesById.get(b.partner_id) || "Parceiro" : "",
+      partner_name: b.partner_id ? sanitizeForExcel(partnerNamesById.get(b.partner_id) || "Parceiro") : "",
       comissao_valor: b.partner_id ? Number(b.comissao_valor || 0) : "",
       comissao_paga_label: b.partner_id ? (b.comissao_paga ? "Sim" : "Não") : "",
       created_at_label: formatDateTimeBR(b.created_at),

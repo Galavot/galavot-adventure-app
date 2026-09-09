@@ -11,6 +11,7 @@ import { verifyToken } from "./_auth.js";
 import { expireAllStalePendingBookings } from "./_bookingExpiry.js";
 import { getMaxQuadriciclos } from "./_slots.js";
 import { isDateBlocked } from "./_blockedDates.js";
+import { getBrazilNow } from "./_brazilTime.js";
 import { TOURS } from "../src/data.js";
 
 export default async function handler(req, res) {
@@ -52,6 +53,14 @@ export default async function handler(req, res) {
     // manhã/tarde) — usado quando o cliente não pode ir no dia combinado
     // e quer trocar, mantendo o mesmo pagamento já feito.
     if (newDate) {
+      // Trava simples: não deixa remarcar pra uma data que já passou (fuso
+      // do Brasil, mesma fonte de verdade usada em todo o resto do app).
+      // Data de hoje ainda é permitida, só não deixa mandar pro passado.
+      const { dateStr: hojeBrasil } = getBrazilNow();
+      if (newDate < hojeBrasil) {
+        return res.status(400).json({ error: "Não é possível remarcar pra uma data que já passou." });
+      }
+
       const { data: current, error: fetchError } = await supabase
         .from("bookings")
         .select("tour_id, tour_name, booking_date")

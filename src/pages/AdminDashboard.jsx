@@ -19,6 +19,14 @@ function formatDate(iso) {
   return `${day}/${month}/${year}`;
 }
 
+// "AAAA-MM-DD" de hoje, sempre no horário local do aparelho (nunca
+// toISOString() — ela vira UTC e adianta o dia à noite, o mesmo bug já
+// corrigido no calendário de reserva do cliente).
+function todayISO() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("reservas"); // 'reservas' | 'parceiros'
@@ -362,6 +370,7 @@ export default function AdminDashboard() {
                       </select>
                       <input
                         type="date"
+                        min={todayISO()}
                         value={rescheduleDraft.date}
                         onChange={(e) => setRescheduleDraft((prev) => ({ ...prev, date: e.target.value }))}
                         className="rounded-lg px-2 py-2 bg-stone border border-hline text-white text-[12px] outline-none"
