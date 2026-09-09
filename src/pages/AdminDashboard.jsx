@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck, Mail, FileSpreadsheet } from "lucide-react";
+import { LogOut, RefreshCw, Clock, Users, Phone, ShieldCheck, Mail, FileSpreadsheet, CalendarClock } from "lucide-react";
 import { Pill } from "../components/UI.jsx";
 import AdminPartners from "./AdminPartners.jsx";
 import AdminGuides from "./AdminGuides.jsx";
 import AdminDailyList from "./AdminDailyList.jsx";
 import AdminPrices from "./AdminPrices.jsx";
+import { TOURS } from "../data.js";
 
 const STATUS_OPTIONS = ["confirmado", "concluido", "cancelado"];
 
@@ -35,6 +36,13 @@ export default function AdminDashboard() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   }); // "AAAA-MM"
   const [exporting, setExporting] = useState(false);
+  // Reserva cujo formulário de "remarcar" está aberto no momento, e os
+  // valores escolhidos ali — só uma por vez, guardado fora da lista de
+  // reservas pra não precisar recriar o array inteiro a cada tecla.
+  const [reschedulingId, setReschedulingId] = useState(null);
+  const [rescheduleDraft, setRescheduleDraft] = useState({ date: "", tourId: "" });
+  const [rescheduling, setRescheduling] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState(null);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -101,6 +109,42 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     sessionStorage.removeItem("galavot_admin_token");
     navigate("/admin");
+  };
+
+  const startReschedule = (booking) => {
+    setReschedulingId(booking.id);
+    setRescheduleDraft({ date: "", tourId: booking.tour_id });
+    setRescheduleError(null);
+  };
+
+  const cancelReschedule = () => {
+    setReschedulingId(null);
+    setRescheduleError(null);
+  };
+
+  const confirmReschedule = async (bookingId) => {
+    if (!rescheduleDraft.date) {
+      setRescheduleError("Escolha a nova data.");
+      return;
+    }
+    setRescheduling(true);
+    setRescheduleError(null);
+    const token = getToken();
+    try {
+      const res = await fetch("/api/admin-bookings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: bookingId, newDate: rescheduleDraft.date, newTourId: rescheduleDraft.tourId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao remarcar");
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? data.booking : b)));
+      setReschedulingId(null);
+    } catch (err) {
+      setRescheduleError(err.message);
+    } finally {
+      setRescheduling(false);
+    }
   };
 
   const filtered = filter === "todos" ? bookings : bookings.filter((b) => b.status === filter);
@@ -280,7 +324,7 @@ export default function AdminDashboard() {
                   </div>
                   {b.ip && <div className="text-[9px] text-muted mt-1">IP: {b.ip}</div>}
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3 flex-wrap">
                   {STATUS_OPTIONS.filter((s) => s !== b.status).map((s) => (
                     <button
                       key={s}
@@ -290,7 +334,61 @@ export default function AdminDashboard() {
                       Marcar {s}
                     </button>
                   ))}
+                  {["confirmado", "concluido", "conflito_vaga"].includes(b.status) && reschedulingId !== b.id && (
+                    <button
+                      onClick={() => startReschedule(b)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-moss text-white"
+                    >
+                      <CalendarClock size={12} />
+                      Remarcar
+                    </button>
+                  )}
                 </div>
+
+                {reschedulingId === b.id && (
+                  <div className="rounded-lg px-3 py-3 mt-3 bg-ink border border-orange flex flex-col gap-2">
+                    <span className="text-[11px] text-cream font-semibold">Remarcar reserva {b.booking_code}</span>
+                    <div className="flex gap-2 flex-wrap">
+                      <select
+                        value={rescheduleDraft.tourId}
+                        onChange={(e) => setRescheduleDraft((prev) => ({ ...prev, tourId: e.target.value }))}
+                        className="rounded-lg px-2 py-2 bg-stone border border-hline text-white text-[12px] outline-none"
+                      >
+                        {TOURS.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="date"
+                        value={rescheduleDraft.date}
+                        onChange={(e) => setRescheduleDraft((prev) => ({ ...prev, date: e.target.value }))}
+                        className="rounded-lg px-2 py-2 bg-stone border border-hline text-white text-[12px] outline-none"
+                      />
+                    </div>
+                    {rescheduleError && <p className="text-[11px] text-[#ef4444]">{rescheduleError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => confirmReschedule(b.id)}
+                        disabled={rescheduling}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-50"
+                      >
+                        {rescheduling ? "Verificando vaga..." : "Confirmar nova data"}
+                      </button>
+                      <button
+                        onClick={cancelReschedule}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-stone text-cream border border-hline"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted">
+                      O código, o cliente e o valor pago continuam os mesmos — só a data (e o turno,
+                      se você trocar) mudam. Só é permitido se a vaga estiver livre no dia escolhido.
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
