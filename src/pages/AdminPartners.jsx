@@ -1,6 +1,20 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { UserPlus, Wallet, Power, Trash2, Pencil, Check, X } from "lucide-react";
+import { UserPlus, Wallet, Power, Trash2, Pencil, Check, X, CalendarCheck2 } from "lucide-react";
 import { PrimaryButton } from "../components/UI.jsx";
+
+// "AAAA-MM-DD" de hoje, sempre no horário local (nunca toISOString() —
+// ela vira UTC e adianta o dia à noite).
+function todayISO() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function formatDateBR(iso) {
+  if (!iso) return "";
+  const [year, month, day] = iso.split("-");
+  if (!year || !month || !day) return iso;
+  return `${day}/${month}/${year}`;
+}
 
 export default function AdminPartners({ bookings }) {
   const [partners, setPartners] = useState([]);
@@ -16,6 +30,13 @@ export default function AdminPartners({ bookings }) {
   const [editingWhatsappId, setEditingWhatsappId] = useState(null);
   const [whatsappDraft, setWhatsappDraft] = useState("");
   const [savingWhatsapp, setSavingWhatsapp] = useState(false);
+  // Janela de acerto de comissão: qual parceiro está com a janela
+  // aberta, quais reservas estão marcadas pra pagar agora, e o estado de
+  // "enviando".
+  const [settleModalPartnerId, setSettleModalPartnerId] = useState(null);
+  const [selectedBookingIds, setSelectedBookingIds] = useState(new Set());
+  const [settling, setSettling] = useState(false);
+  const [settleError, setSettleError] = useState(null);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -49,6 +70,15 @@ export default function AdminPartners({ bookings }) {
       .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
     const total = partnerBookings.reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
     return { pendente, total, reservas: partnerBookings.length };
+  };
+
+  // Reservas dessa parceria que ainda não tiveram a comissão paga —
+  // usado pra montar a lista de checkboxes na janela de acerto.
+  const pendingBookingsFor = (partnerId) => {
+    const PAGO_DE_VERDADE = ["confirmado", "concluido"];
+    return bookings
+      .filter((b) => b.partner_id === partnerId && PAGO_DE_VERDADE.includes(b.status) && !b.comissao_paga)
+      .sort((a, b) => (a.booking_date || "").localeCompare(b.booking_date || ""));
   };
 
   const handleCreate = async (e) => {
@@ -117,16 +147,65 @@ export default function AdminPartners({ bookings }) {
     }
   };
 
-  const markPaid = async (partnerId) => {
+  const openSettleModal = (partnerId) => {
+    const pending = pendingBookingsFor(partnerId);
+    // Já vem pré-marcado o que já aconteceu (data do passeio no passado)
+    // — é o critério que você usa no acerto de toda segunda. Os passeios
+    // futuros ficam desmarcados, mas dá pra marcar também se quiser.
+    const hoje = todayISO();
+    const preSelected = new Set(pending.filter((b) => b.booking_date && b.booking_date < hoje).map((b) => b.id));
+    setSelectedBookingIds(preSelected);
+    setSettleError(null);
+    setSettleModalPartnerId(partnerId);
+  };
+
+  const closeSettleModal = () => {
+    setSettleModalPartnerId(null);
+    setSelectedBookingIds(new Set());
+    setSettleError(null);
+  };
+
+  const toggleBookingSelected = (bookingId) => {
+    setSelectedBookingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(bookingId)) next.delete(bookingId);
+      else next.add(bookingId);
+      return next;
+    });
+  };
+
+  const selectAllPending = (partnerId) => {
+    setSelectedBookingIds(new Set(pendingBookingsFor(partnerId).map((b) => b.id)));
+  };
+
+  const selectOnlyPast = (partnerId) => {
+    const hoje = todayISO();
+    setSelectedBookingIds(
+      new Set(pendingBookingsFor(partnerId).filter((b) => b.booking_date && b.booking_date < hoje).map((b) => b.id))
+    );
+  };
+
+  const clearSelection = () => setSelectedBookingIds(new Set());
+
+  const confirmSettle = async () => {
+    if (selectedBookingIds.size === 0) {
+      setSettleError("Selecione pelo menos uma reserva.");
+      return;
+    }
+    setSettling(true);
+    setSettleError(null);
     try {
-      await fetch("/api/admin-mark-commission-paid", {
+      const res = await fetch("/api/admin-mark-commission-paid", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ partnerId }),
+        body: JSON.stringify({ partnerId: settleModalPartnerId, bookingIds: Array.from(selectedBookingIds) }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao registrar o pagamento");
       window.location.reload();
     } catch (err) {
-      setError(err.message);
+      setSettleError(err.message);
+      setSettling(false);
     }
   };
 
@@ -298,10 +377,11 @@ export default function AdminPartners({ bookings }) {
               </div>
               {pendente > 0 && (
                 <button
-                  onClick={() => markPaid(p.id)}
-                  className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-ink text-cream border border-hline"
+                  onClick={() => openSettleModal(p.id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-ink text-cream border border-hline"
                 >
-                  Marcar como pago
+                  <CalendarCheck2 size={12} />
+                  Acertar comissão
                 </button>
               )}
             </div>
@@ -319,6 +399,135 @@ export default function AdminPartners({ bookings }) {
           </div>
         );
       })}
+
+      {settleModalPartnerId && (
+        <SettleCommissionModal
+          partner={partners.find((p) => p.id === settleModalPartnerId)}
+          pendingBookings={pendingBookingsFor(settleModalPartnerId)}
+          selectedBookingIds={selectedBookingIds}
+          onToggle={toggleBookingSelected}
+          onSelectAll={() => selectAllPending(settleModalPartnerId)}
+          onSelectOnlyPast={() => selectOnlyPast(settleModalPartnerId)}
+          onClearSelection={clearSelection}
+          onConfirm={confirmSettle}
+          onClose={closeSettleModal}
+          settling={settling}
+          error={settleError}
+        />
+      )}
+    </div>
+  );
+}
+
+function SettleCommissionModal({
+  partner,
+  pendingBookings,
+  selectedBookingIds,
+  onToggle,
+  onSelectAll,
+  onSelectOnlyPast,
+  onClearSelection,
+  onConfirm,
+  onClose,
+  settling,
+  error,
+}) {
+  const hoje = todayISO();
+  const selectedTotal = pendingBookings
+    .filter((b) => selectedBookingIds.has(b.id))
+    .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
+      <div
+        className="w-full max-w-md max-h-[85vh] rounded-t-2xl bg-charcoal border-t border-hline flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-4 pt-4 pb-3 border-b border-hline flex items-center justify-between">
+          <div>
+            <div className="font-display text-white text-base">Acertar comissão</div>
+            <div className="text-[11px] text-muted mt-0.5">{partner?.nome}</div>
+          </div>
+          <button onClick={onClose} aria-label="Fechar" className="w-7 h-7 flex items-center justify-center rounded-full bg-stone">
+            <X size={14} color="#B7AFA2" />
+          </button>
+        </div>
+
+        <div className="flex gap-2 px-4 pt-3">
+          <button
+            onClick={onSelectOnlyPast}
+            className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-stone text-cream border border-hline"
+          >
+            Só as já realizadas
+          </button>
+          <button
+            onClick={onSelectAll}
+            className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-stone text-cream border border-hline"
+          >
+            Selecionar tudo
+          </button>
+          <button
+            onClick={onClearSelection}
+            className="px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-stone text-cream border border-hline"
+          >
+            Limpar
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
+          {pendingBookings.length === 0 && (
+            <p className="text-muted text-[12px] text-center py-4">Nenhuma comissão pendente.</p>
+          )}
+          {pendingBookings.map((b) => {
+            const jaAconteceu = b.booking_date && b.booking_date < hoje;
+            const checked = selectedBookingIds.has(b.id);
+            return (
+              <label
+                key={b.id}
+                className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 border ${
+                  checked ? "bg-stone border-orange" : "bg-ink border-hline"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => onToggle(b.id)}
+                  className="mt-0.5 w-4 h-4 accent-orange flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[12px] text-cream font-medium">{b.tour_name}</span>
+                    <span
+                      className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        jaAconteceu ? "bg-moss text-white" : "bg-hline text-muted"
+                      }`}
+                    >
+                      {jaAconteceu ? "JÁ REALIZADO" : "AINDA NÃO ACONTECEU"}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-muted mt-0.5">
+                    {formatDateBR(b.booking_date)} · {b.customer_name} · {b.booking_code}
+                  </div>
+                </div>
+                <span className="text-[12px] font-semibold text-orange flex-shrink-0">
+                  R$ {Number(b.comissao_valor || 0).toFixed(2)}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+
+        <div className="px-4 py-3 border-t border-hline">
+          {error && <p className="text-[11px] text-[#ef4444] mb-2">{error}</p>}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[12px] text-muted">{selectedBookingIds.size} selecionada(s)</span>
+            <span className="text-[14px] font-semibold text-cream">Total: R$ {selectedTotal.toFixed(2)}</span>
+          </div>
+          <PrimaryButton onClick={onConfirm} disabled={settling || selectedBookingIds.size === 0}>
+            {settling ? "REGISTRANDO..." : "CONFIRMAR PAGAMENTO"}
+          </PrimaryButton>
+        </div>
+      </div>
     </div>
   );
 }

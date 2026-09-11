@@ -1,7 +1,9 @@
 // api/admin-mark-commission-paid.js
 //
-// Marca todas as reservas pendentes de um parceiro como comissão paga.
-// Protegida por token de admin.
+// Marca a comissão de reservas específicas de um parceiro como paga —
+// permite acerto total ou parcial (o admin escolhe quais reservas está
+// pagando agora, ex: só os passeios que já aconteceram). Protegida por
+// token de admin.
 
 import { createClient } from "@supabase/supabase-js";
 import { verifyToken } from "./_auth.js";
@@ -22,21 +24,30 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Banco de dados não configurado." });
   }
 
-  const { partnerId } = req.body;
+  const { partnerId, bookingIds } = req.body;
   if (!partnerId) return res.status(400).json({ error: "partnerId é obrigatório" });
 
   const supabase = createClient(supabaseUrl, serviceKey);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("bookings")
     .update({ comissao_paga: true })
     .eq("partner_id", partnerId)
     .eq("comissao_paga", false)
     // Só marca como paga comissão de reserva que realmente foi paga pelo
     // cliente — nunca de reserva pendente, recusada ou cancelada.
-    .in("status", ["confirmado", "concluido"])
-    .select();
+    .in("status", ["confirmado", "concluido"]);
+
+  // Se vier uma lista específica de reservas (acerto parcial escolhido
+  // na janela do ADM), restringe só a elas. Sem lista, mantém o
+  // comportamento antigo de marcar tudo que está pendente pra esse
+  // parceiro — usado como atalho de "acerto total".
+  if (Array.isArray(bookingIds) && bookingIds.length > 0) {
+    query = query.in("id", bookingIds);
+  }
+
+  const { data, error } = await query.select();
 
   if (error) return res.status(500).json({ error: error.message });
-  return res.status(200).json({ updated: data?.length || 0 });
+  return res.status(200).json({ updated: data?.length || 0, bookings: data || [] });
 }
