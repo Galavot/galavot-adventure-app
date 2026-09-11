@@ -3,26 +3,31 @@
 // GET (sem token)  -> modo público: devolve só { prices: { matinal: 350, ... } }
 //                     usado pelo site pra saber o preço atual de cada passeio
 // GET (com token admin) -> modo admin: devolve lista detalhada (nome, preço,
-//                     vagas por turno, se é o padrão, quando foi atualizado)
-//                     e a lista de datas bloqueadas, pra tela de edição
+//                     vagas por turno, se é o padrão, quando foi atualizado),
+//                     a lista de datas bloqueadas, e o valor pago por turno
+//                     de guia — pra tela de edição
 // PATCH (com token admin) -> atualiza o preço E/OU o número de vagas
-//                     (quadriciclos) por turno de um passeio. Manda só o
-//                     campo que quer mudar (price ou maxQuadriciclos) — o
-//                     outro fica como já estava.
+//                     (quadriciclos) por turno de um passeio (precisa de
+//                     tourId), OU o valor pago por turno de guia (campo
+//                     guideShiftValue sozinho, sem tourId). Manda só o
+//                     campo que quer mudar — o resto fica como já estava.
 // POST (com token admin) -> bloqueia uma data pra um passeio (tourId +
 //                     date), impedindo reserva nela — usado quando o Sid
 //                     não quer vender passeio num dia específico (evento,
 //                     manutenção geral, feriado etc).
 // DELETE (com token admin) -> desbloqueia (remove o bloqueio) por id.
 //
-// Os quatro fica no mesmo arquivo de propósito: a Vercel, no plano
-// gratuito, limita a 12 funções serverless por deploy — juntar esses
-// endpoints evita passar do limite (veja também check-availability-batch.js,
-// que substituiu check-availability.js).
+// Tudo fica no mesmo arquivo de propósito: a Vercel, no plano gratuito,
+// limita a 12 funções serverless por deploy — juntar esses endpoints
+// evita passar do limite (veja também check-availability-batch.js, que
+// substituiu check-availability.js).
 
 import { createClient } from "@supabase/supabase-js";
 import { verifyToken } from "./_auth.js";
 import { TOURS } from "../src/data.js";
+
+const GUIDE_SHIFT_VALUE_KEY = "guide_shift_value";
+const GUIDE_SHIFT_VALUE_DEFAULT = 100;
 
 export default async function handler(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -37,7 +42,7 @@ export default async function handler(req, res) {
     const auth = verifyToken(req, process.env.ADMIN_SECRET, "admin");
 
     if (!supabaseUrl || !serviceKey) {
-      return res.status(200).json(auth ? { prices: [], blockedDates: [] } : { prices: defaults });
+      return res.status(200).json(auth ? { prices: [], blockedDates: [], guideShiftValue: GUIDE_SHIFT_VALUE_DEFAULT } : { prices: defaults });
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
@@ -46,7 +51,7 @@ export default async function handler(req, res) {
       .select("tour_id, price, max_quadriciclos, updated_at");
 
     if (error) {
-      return res.status(200).json(auth ? { prices: [], blockedDates: [] } : { prices: defaults });
+      return res.status(200).json(auth ? { prices: [], blockedDates: [], guideShiftValue: GUIDE_SHIFT_VALUE_DEFAULT } : { prices: defaults });
     }
 
     // Modo público (sem token válido): só o mapa simples de preços atuais.
@@ -84,7 +89,14 @@ export default async function handler(req, res) {
       date: b.date,
     }));
 
-    return res.status(200).json({ prices, blockedDates });
+    const { data: settingRow } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", GUIDE_SHIFT_VALUE_KEY)
+      .single();
+    const guideShiftValue = settingRow ? Number(settingRow.value) : GUIDE_SHIFT_VALUE_DEFAULT;
+
+    return res.status(200).json({ prices, blockedDates, guideShiftValue });
   }
 
   if (req.method === "PATCH") {
@@ -97,7 +109,24 @@ export default async function handler(req, res) {
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);
-    const { tourId, price, maxQuadriciclos } = req.body;
+    const { tourId, price, maxQuadriciclos, guideShiftValue } = req.body;
+
+    // Mudar o valor pago por turno de guia é independente de qualquer
+    // passeio — não precisa de tourId.
+    if (guideShiftValue !== undefined && !tourId) {
+      const numericValue = Number(guideShiftValue);
+      if (!numericValue || numericValue <= 0) {
+        return res.status(400).json({ error: "Valor inválido" });
+      }
+      const { error: settingError } = await supabase
+        .from("app_settings")
+        .upsert(
+          { key: GUIDE_SHIFT_VALUE_KEY, value: String(numericValue), updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        );
+      if (settingError) return res.status(500).json({ error: settingError.message });
+      return res.status(200).json({ guideShiftValue: numericValue });
+    }
 
     const tour = TOURS.find((t) => t.id === tourId);
     if (!tourId || !tour) {

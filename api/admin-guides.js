@@ -53,9 +53,20 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Turno inválido" });
       }
 
+      // Busca o valor atual configurado (CONFIGURAÇÕES > valor do guia)
+      // em vez de um número fixo no código — assim, quando o Sid mudar o
+      // valor lá, os próximos registros já saem com o valor novo, sem
+      // precisar mexer em nada aqui.
+      const { data: settingRow } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "guide_shift_value")
+        .single();
+      const valor = settingRow ? Number(settingRow.value) : 100;
+
       const { data, error } = await supabase
         .from("guide_shifts")
-        .insert({ guide_id: guideId, tour_date: date, turno, valor: 100 })
+        .insert({ guide_id: guideId, tour_date: date, turno, valor })
         .select()
         .single();
 

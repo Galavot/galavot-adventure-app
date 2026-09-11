@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Tag, Pencil, Save, X, Car, Ban, Trash2, Plus } from "lucide-react";
+import { Tag, Pencil, Save, X, Car, Ban, Trash2, Plus, UserCheck } from "lucide-react";
 import { TOURS, getUpcomingDates } from "../data.js";
 
 const UPCOMING_DATES = getUpcomingDates(30);
@@ -30,6 +30,11 @@ export default function AdminPrices() {
   const [blockDate, setBlockDate] = useState(UPCOMING_DATES[0]?.iso || "");
   const [savingBlock, setSavingBlock] = useState(false);
   const [deletingBlockId, setDeletingBlockId] = useState(null);
+  // Valor pago por turno de guia conduzido (CONFIGURAÇÕES > editável).
+  const [guideShiftValue, setGuideShiftValue] = useState(100);
+  const [editingGuideValue, setEditingGuideValue] = useState(false);
+  const [guideValueDraft, setGuideValueDraft] = useState("");
+  const [savingGuideValue, setSavingGuideValue] = useState(false);
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -44,6 +49,7 @@ export default function AdminPrices() {
       if (!res.ok) throw new Error(data.error || "Erro ao carregar preços");
       setPrices(data.prices || []);
       setBlockedDates(data.blockedDates || []);
+      if (data.guideShiftValue != null) setGuideShiftValue(data.guideShiftValue);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -141,6 +147,31 @@ export default function AdminPrices() {
       setError(err.message);
     } finally {
       setDeletingBlockId(null);
+    }
+  };
+
+  const startEditGuideValue = () => {
+    setEditingGuideValue(true);
+    setGuideValueDraft(String(guideShiftValue));
+  };
+
+  const handleSaveGuideValue = async () => {
+    setSavingGuideValue(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-prices", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ guideShiftValue: guideValueDraft }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao salvar valor");
+      setGuideShiftValue(data.guideShiftValue);
+      setEditingGuideValue(false);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingGuideValue(false);
     }
   };
 
@@ -260,6 +291,60 @@ export default function AdminPrices() {
           </div>
         </div>
       ))}
+
+      <div className="rounded-xl p-4 bg-stone border border-hline">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <UserCheck size={14} color="#F2600C" />
+            <span className="font-display text-white text-[15px]">VALOR POR TURNO DE GUIA</span>
+          </div>
+          {!editingGuideValue && (
+            <button
+              onClick={startEditGuideValue}
+              className="flex items-center gap-1 text-[11px] font-bold text-orange"
+            >
+              <Pencil size={11} /> Editar
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-muted mt-1">
+          Quanto é pago pra cada guia por turno conduzido. Reservas já registradas na AGENDA mantêm o valor de
+          quando foram pagas — mudar aqui só afeta os próximos registros.
+        </p>
+
+        {editingGuideValue ? (
+          <div className="flex gap-2 mt-3">
+            <div className="flex-1 flex items-center gap-1 rounded-lg px-3 py-2 bg-ink border border-hline">
+              <span className="text-muted text-[13px]">R$</span>
+              <input
+                type="number"
+                value={guideValueDraft}
+                onChange={(e) => setGuideValueDraft(e.target.value)}
+                autoFocus
+                className="bg-transparent text-white text-[14px] outline-none w-full"
+              />
+            </div>
+            <button
+              onClick={handleSaveGuideValue}
+              disabled={savingGuideValue}
+              className="flex items-center gap-1.5 px-3 rounded-lg bg-orange text-ink text-[12px] font-bold"
+            >
+              <Save size={12} /> Salvar
+            </button>
+            <button
+              onClick={() => setEditingGuideValue(false)}
+              className="flex items-center px-2 rounded-lg bg-ink border border-hline"
+            >
+              <X size={14} color="#B7AFA2" />
+            </button>
+          </div>
+        ) : (
+          <div className="font-display text-orange text-2xl mt-1">
+            R$ {guideShiftValue}
+            <span className="font-body text-[11px] text-muted ml-1.5">/turno conduzido</span>
+          </div>
+        )}
+      </div>
 
       <div className="rounded-xl p-4 bg-stone border border-hline">
         <div className="flex justify-between items-center">

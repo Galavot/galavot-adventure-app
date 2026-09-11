@@ -40,6 +40,7 @@ function buildMessage(tour, dateLabel, bookingsForTurno) {
 export default function AdminDailyList({ bookings }) {
   const [guides, setGuides] = useState([]);
   const [shifts, setShifts] = useState([]);
+  const [guideShiftValue, setGuideShiftValue] = useState(100);
   const [loading, setLoading] = useState(true);
   const [dates] = useState(() => getUpcomingDates(30));
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -69,6 +70,14 @@ export default function AdminDailyList({ bookings }) {
       .catch(() => setGuides([]))
       .finally(() => setLoading(false));
     loadShifts();
+    // Valor atual configurado em CONFIGURAÇÕES > VALOR POR TURNO DE GUIA
+    // — assim o botão sempre mostra o valor certo, mesmo depois de mudar.
+    fetch("/api/admin-prices", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.guideShiftValue != null) setGuideShiftValue(data.guideShiftValue);
+      })
+      .catch(() => {});
   }, [loadShifts]);
 
   const shiftFor = (dateIso, turno) => shifts.find((s) => s.tour_date === dateIso && s.turno === turno);
@@ -307,7 +316,7 @@ export default function AdminDailyList({ bookings }) {
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-40"
                       >
                         <DollarSign size={12} />
-                        {registering === key ? "..." : "Pagar R$100"}
+                        {registering === key ? "..." : `Pagar R$${guideShiftValue}`}
                       </button>
                     </div>
                   );
