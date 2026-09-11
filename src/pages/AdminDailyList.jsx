@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Send, CheckCircle2, XCircle, Sun, Moon, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { Send, CheckCircle2, XCircle, Sun, Moon, ChevronLeft, ChevronRight, DollarSign, Undo2 } from "lucide-react";
 import { TOURS, getUpcomingDates } from "../data.js";
 
 function paymentLine(b) {
@@ -39,18 +39,73 @@ function buildMessage(tour, dateLabel, bookingsForTurno) {
 
 export default function AdminDailyList({ bookings }) {
   const [guides, setGuides] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dates] = useState(() => getUpcomingDates(30));
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // Guia escolhido no seletor de cada turno, antes de confirmar o
+  // pagamento — chave "AAAA-MM-DD-turno" -> id do guia.
+  const [pickedGuide, setPickedGuide] = useState({});
+  const [registering, setRegistering] = useState(null); // "AAAA-MM-DD-turno" em andamento
+
+  const getToken = () => sessionStorage.getItem("galavot_admin_token");
+
+  const loadShifts = useCallback(async () => {
+    const token = getToken();
+    try {
+      const res = await fetch("/api/admin-guides?resource=shifts", { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      setShifts(data.shifts || []);
+    } catch {
+      setShifts([]);
+    }
+  }, []);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("galavot_admin_token");
+    const token = getToken();
     fetch("/api/admin-guides", { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((data) => setGuides(data.guides || []))
       .catch(() => setGuides([]))
       .finally(() => setLoading(false));
-  }, []);
+    loadShifts();
+  }, [loadShifts]);
+
+  const shiftFor = (dateIso, turno) => shifts.find((s) => s.tour_date === dateIso && s.turno === turno);
+
+  const registerShift = async (dateIso, turno) => {
+    const guideId = pickedGuide[`${dateIso}-${turno}`];
+    if (!guideId) return;
+    setRegistering(`${dateIso}-${turno}`);
+    try {
+      const res = await fetch("/api/admin-guides", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ action: "register_shift", guideId, date: dateIso, turno }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao registrar");
+      await loadShifts();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setRegistering(null);
+    }
+  };
+
+  const undoShift = async (shiftId) => {
+    if (!confirm("Desfazer esse pagamento de guia?")) return;
+    try {
+      await fetch("/api/admin-guides", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ shiftId }),
+      });
+      await loadShifts();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   // Quantas reservas (não canceladas) existem em cada um dos próximos 30
   // dias — alimenta a faixa de agenda no topo, pra dar uma visão geral do
@@ -208,6 +263,56 @@ export default function AdminDailyList({ bookings }) {
                   ))}
                 </div>
               )}
+
+              <div className="mt-3 pt-3 border-t border-hline">
+                {(() => {
+                  const shift = shiftFor(selected.iso, tour.id);
+                  if (shift) {
+                    const guideName = guides.find((g) => g.id === shift.guide_id)?.nome || "Guia";
+                    return (
+                      <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-ink border border-moss">
+                        <span className="text-[12px] text-cream">
+                          ✅ {guideName} · R$ {Number(shift.valor).toFixed(2)} pago
+                        </span>
+                        <button
+                          onClick={() => undoShift(shift.id)}
+                          aria-label="Desfazer pagamento do guia"
+                          className="flex items-center gap-1 text-[10px] text-muted"
+                        >
+                          <Undo2 size={11} /> desfazer
+                        </button>
+                      </div>
+                    );
+                  }
+                  const key = `${selected.iso}-${tour.id}`;
+                  return (
+                    <div className="flex gap-2">
+                      <select
+                        value={pickedGuide[key] || ""}
+                        onChange={(e) => setPickedGuide((prev) => ({ ...prev, [key]: e.target.value }))}
+                        className="flex-1 rounded-lg px-2 py-2 bg-ink border border-hline text-white text-[12px] outline-none"
+                      >
+                        <option value="">Quem conduziu esse turno?</option>
+                        {guides
+                          .filter((g) => g.ativo)
+                          .map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.nome}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        onClick={() => registerShift(selected.iso, tour.id)}
+                        disabled={!pickedGuide[key] || registering === key}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-40"
+                      >
+                        <DollarSign size={12} />
+                        {registering === key ? "..." : "Pagar R$100"}
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           );
         })}
