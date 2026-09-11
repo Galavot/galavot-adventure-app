@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { UserPlus, Wallet, Power, Trash2, Pencil, Check, X, CalendarCheck2 } from "lucide-react";
+import { UserPlus, Wallet, Power, Trash2, Pencil, Check, X, CalendarCheck2, MessageCircle, PartyPopper } from "lucide-react";
 import { PrimaryButton } from "../components/UI.jsx";
 
 // "AAAA-MM-DD" de hoje, sempre no horário local (nunca toISOString() —
@@ -14,6 +14,23 @@ function formatDateBR(iso) {
   const [year, month, day] = iso.split("-");
   if (!year || !month || !day) return iso;
   return `${day}/${month}/${year}`;
+}
+
+// Monta a mensagem de resumo do pagamento de comissão e o link pra abrir
+// o WhatsApp já com ela pronta, direto pro número cadastrado do
+// parceiro. Não envia nada sozinho — só abre o WhatsApp do próprio
+// admin com o texto preenchido, pra ele conferir e mandar.
+function buildCommissionWhatsAppLink(partner, items, total) {
+  const linhas = items
+    .map((b) => `• ${b.booking_code} · ${b.tour_name} · ${formatDateBR(b.booking_date)} · R$ ${Number(b.comissao_valor || 0).toFixed(2)}`)
+    .join("\n");
+  const message =
+    `Oi, ${partner?.nome || ""}! Comissão paga ✅\n\n` +
+    `${linhas}\n\n` +
+    `Total pago: R$ ${total.toFixed(2)}\n\n` +
+    `Qualquer dúvida, é só chamar!`;
+  const phoneDigits = String(partner?.whatsapp || "").replace(/\D/g, "");
+  return `https://wa.me/55${phoneDigits}?text=${encodeURIComponent(message)}`;
 }
 
 export default function AdminPartners({ bookings }) {
@@ -37,6 +54,7 @@ export default function AdminPartners({ bookings }) {
   const [selectedBookingIds, setSelectedBookingIds] = useState(new Set());
   const [settling, setSettling] = useState(false);
   const [settleError, setSettleError] = useState(null);
+  const [settledSummary, setSettledSummary] = useState(null); // { partner, items, total } — pra tela de sucesso com envio pro zap
 
   const getToken = () => sessionStorage.getItem("galavot_admin_token");
 
@@ -156,6 +174,7 @@ export default function AdminPartners({ bookings }) {
     const preSelected = new Set(pending.filter((b) => b.booking_date && b.booking_date < hoje).map((b) => b.id));
     setSelectedBookingIds(preSelected);
     setSettleError(null);
+    setSettledSummary(null);
     setSettleModalPartnerId(partnerId);
   };
 
@@ -163,6 +182,7 @@ export default function AdminPartners({ bookings }) {
     setSettleModalPartnerId(null);
     setSelectedBookingIds(new Set());
     setSettleError(null);
+    setSettledSummary(null);
   };
 
   const toggleBookingSelected = (bookingId) => {
@@ -194,6 +214,8 @@ export default function AdminPartners({ bookings }) {
     }
     setSettling(true);
     setSettleError(null);
+    const partner = partners.find((p) => p.id === settleModalPartnerId);
+    const items = pendingBookingsFor(settleModalPartnerId).filter((b) => selectedBookingIds.has(b.id));
     try {
       const res = await fetch("/api/admin-mark-commission-paid", {
         method: "POST",
@@ -202,11 +224,19 @@ export default function AdminPartners({ bookings }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao registrar o pagamento");
-      window.location.reload();
+      // Não recarrega ainda — mostra a tela de sucesso com a opção de
+      // mandar o resumo pro WhatsApp do parceiro antes de sair da tela.
+      const total = items.reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
+      setSettledSummary({ partner, items, total });
+      setSettling(false);
     } catch (err) {
       setSettleError(err.message);
       setSettling(false);
     }
+  };
+
+  const finishSettle = () => {
+    window.location.reload();
   };
 
   const handleDelete = async (partnerId) => {
@@ -413,6 +443,8 @@ export default function AdminPartners({ bookings }) {
           onClose={closeSettleModal}
           settling={settling}
           error={settleError}
+          settledSummary={settledSummary}
+          onFinish={finishSettle}
         />
       )}
     </div>
@@ -431,11 +463,63 @@ function SettleCommissionModal({
   onClose,
   settling,
   error,
+  settledSummary,
+  onFinish,
 }) {
   const hoje = todayISO();
   const selectedTotal = pendingBookings
     .filter((b) => selectedBookingIds.has(b.id))
     .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
+
+  // Depois de confirmar o pagamento, troca pra essa telinha de sucesso
+  // com a opção de mandar o resumo pro WhatsApp do parceiro antes de
+  // fechar — só aparece nesse momento, não muda o fluxo normal da janela.
+  if (settledSummary) {
+    const temWhatsapp = Boolean(settledSummary.partner?.whatsapp);
+    return (
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70">
+        <div className="w-full max-w-md max-h-[85vh] rounded-t-2xl bg-charcoal border-t border-hline flex flex-col">
+          <div className="px-4 pt-6 pb-4 flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-moss flex items-center justify-center mb-3">
+              <PartyPopper size={22} color="#fff" />
+            </div>
+            <div className="font-display text-white text-lg">Comissão registrada!</div>
+            <div className="text-[12px] text-muted mt-1">
+              {settledSummary.items.length} reserva(s) · R$ {settledSummary.total.toFixed(2)} pago pra{" "}
+              {settledSummary.partner?.nome}
+            </div>
+          </div>
+
+          <div className="px-4 pb-4 flex flex-col gap-2">
+            {temWhatsapp ? (
+              <a
+                href={buildCommissionWhatsAppLink(settledSummary.partner, settledSummary.items, settledSummary.total)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 rounded-lg py-3 bg-moss"
+              >
+                <MessageCircle size={16} color="#fff" />
+                <span className="font-display text-white text-[14px]">
+                  ENVIAR RESUMO PRO WHATSAPP DE {settledSummary.partner?.nome?.toUpperCase()}
+                </span>
+              </a>
+            ) : (
+              <p className="text-[11px] text-muted text-center px-2">
+                {settledSummary.partner?.nome} não tem WhatsApp cadastrado — não dá pra mandar o resumo direto.
+                Pode cadastrar no card do parceiro pra próxima vez.
+              </p>
+            )}
+            <button
+              onClick={onFinish}
+              className="w-full py-2.5 rounded-lg text-[12px] font-semibold bg-ink text-cream border border-hline"
+            >
+              Concluir
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
