@@ -80,7 +80,7 @@ export default function AdminDailyList({ bookings }) {
       .catch(() => {});
   }, [loadShifts]);
 
-  const shiftFor = (dateIso, turno) => shifts.find((s) => s.tour_date === dateIso && s.turno === turno);
+  const shiftsFor = (dateIso, turno) => shifts.filter((s) => s.tour_date === dateIso && s.turno === turno);
 
   const registerShift = async (dateIso, turno) => {
     const guideId = pickedGuide[`${dateIso}-${turno}`];
@@ -94,6 +94,7 @@ export default function AdminDailyList({ bookings }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao registrar");
+      setPickedGuide((prev) => ({ ...prev, [`${dateIso}-${turno}`]: "" }));
       await loadShifts();
     } catch (err) {
       alert(err.message);
@@ -273,52 +274,66 @@ export default function AdminDailyList({ bookings }) {
                 </div>
               )}
 
-              <div className="mt-3 pt-3 border-t border-hline">
+              <div className="mt-3 pt-3 border-t border-hline flex flex-col gap-2">
                 {(() => {
-                  const shift = shiftFor(selected.iso, tour.id);
-                  if (shift) {
-                    const guideName = guides.find((g) => g.id === shift.guide_id)?.nome || "Guia";
-                    return (
-                      <div className="flex items-center justify-between rounded-lg px-3 py-2 bg-ink border border-moss">
-                        <span className="text-[12px] text-cream">
-                          ✅ {guideName} · R$ {Number(shift.valor).toFixed(2)} pago
-                        </span>
-                        <button
-                          onClick={() => undoShift(shift.id)}
-                          aria-label="Desfazer pagamento do guia"
-                          className="flex items-center gap-1 text-[10px] text-muted"
-                        >
-                          <Undo2 size={11} /> desfazer
-                        </button>
-                      </div>
-                    );
-                  }
+                  const turnoShifts = shiftsFor(selected.iso, tour.id);
                   const key = `${selected.iso}-${tour.id}`;
+                  // Guias que já estão nessa lista não aparecem de novo no
+                  // seletor — evita tentar registrar o mesmo guia 2x nesse
+                  // turno (o banco também bloqueia, isso é só conveniência).
+                  const jaRegistradosIds = new Set(turnoShifts.map((s) => s.guide_id));
+                  const disponiveisPraAdicionar = guides.filter((g) => g.ativo && !jaRegistradosIds.has(g.id));
+
                   return (
-                    <div className="flex gap-2">
-                      <select
-                        value={pickedGuide[key] || ""}
-                        onChange={(e) => setPickedGuide((prev) => ({ ...prev, [key]: e.target.value }))}
-                        className="flex-1 rounded-lg px-2 py-2 bg-ink border border-hline text-white text-[12px] outline-none"
-                      >
-                        <option value="">Quem conduziu esse turno?</option>
-                        {guides
-                          .filter((g) => g.ativo)
-                          .map((g) => (
-                            <option key={g.id} value={g.id}>
-                              {g.nome}
+                    <>
+                      {turnoShifts.map((shift) => {
+                        const guideName = guides.find((g) => g.id === shift.guide_id)?.nome || "Guia";
+                        return (
+                          <div
+                            key={shift.id}
+                            className="flex items-center justify-between rounded-lg px-3 py-2 bg-ink border border-moss"
+                          >
+                            <span className="text-[12px] text-cream">
+                              ✅ {guideName} · R$ {Number(shift.valor).toFixed(2)} pago
+                            </span>
+                            <button
+                              onClick={() => undoShift(shift.id)}
+                              aria-label="Desfazer pagamento do guia"
+                              className="flex items-center gap-1 text-[10px] text-muted"
+                            >
+                              <Undo2 size={11} /> desfazer
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                      {disponiveisPraAdicionar.length > 0 && (
+                        <div className="flex gap-2">
+                          <select
+                            value={pickedGuide[key] || ""}
+                            onChange={(e) => setPickedGuide((prev) => ({ ...prev, [key]: e.target.value }))}
+                            className="flex-1 rounded-lg px-2 py-2 bg-ink border border-hline text-white text-[12px] outline-none"
+                          >
+                            <option value="">
+                              {turnoShifts.length > 0 ? "Mais algum guia nesse turno?" : "Quem conduziu esse turno?"}
                             </option>
-                          ))}
-                      </select>
-                      <button
-                        onClick={() => registerShift(selected.iso, tour.id)}
-                        disabled={!pickedGuide[key] || registering === key}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-40"
-                      >
-                        <DollarSign size={12} />
-                        {registering === key ? "..." : `Pagar R$${guideShiftValue}`}
-                      </button>
-                    </div>
+                            {disponiveisPraAdicionar.map((g) => (
+                              <option key={g.id} value={g.id}>
+                                {g.nome}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => registerShift(selected.iso, tour.id)}
+                            disabled={!pickedGuide[key] || registering === key}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-40"
+                          >
+                            <DollarSign size={12} />
+                            {registering === key ? "..." : `Pagar R$${guideShiftValue}`}
+                          </button>
+                        </div>
+                      )}
+                    </>
                   );
                 })()}
               </div>

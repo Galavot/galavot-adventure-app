@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         if (error.code === "23505") {
           return res
             .status(409)
-            .json({ error: "Já tem um guia registrado nesse turno nesse dia. Desfaça antes de trocar." });
+            .json({ error: "Esse guia já está registrado nesse turno nesse dia." });
         }
         return res.status(500).json({ error: error.message });
       }
