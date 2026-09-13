@@ -9,6 +9,18 @@ function todayISO() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+// "Já aconteceu" pra fins de acerto de comissão: confia primeiro no
+// status "concluido" (o sinal mais confiável — é o Sid quem marca isso
+// manualmente depois do passeio). Só cai pra comparar a data quando o
+// status ainda não foi atualizado — sem isso, um passeio de HOJE de
+// manhã aparecia como "ainda não aconteceu" a noite inteira, porque
+// comparar só a data ("hoje" não é "menor que hoje") nunca vira
+// verdadeiro no mesmo dia.
+function jaAconteceu(booking) {
+  if (booking.status === "concluido") return true;
+  return Boolean(booking.booking_date && booking.booking_date < todayISO());
+}
+
 function formatDateBR(iso) {
   if (!iso) return "";
   const [year, month, day] = iso.split("-");
@@ -167,11 +179,9 @@ export default function AdminPartners({ bookings }) {
 
   const openSettleModal = (partnerId) => {
     const pending = pendingBookingsFor(partnerId);
-    // Já vem pré-marcado o que já aconteceu (data do passeio no passado)
-    // — é o critério que você usa no acerto de toda segunda. Os passeios
-    // futuros ficam desmarcados, mas dá pra marcar também se quiser.
-    const hoje = todayISO();
-    const preSelected = new Set(pending.filter((b) => b.booking_date && b.booking_date < hoje).map((b) => b.id));
+    // Já vem pré-marcado o que já aconteceu — usa o status "concluido"
+    // (quando o Sid já marcou) ou a data no passado como critério.
+    const preSelected = new Set(pending.filter(jaAconteceu).map((b) => b.id));
     setSelectedBookingIds(preSelected);
     setSettleError(null);
     setSettledSummary(null);
@@ -199,10 +209,7 @@ export default function AdminPartners({ bookings }) {
   };
 
   const selectOnlyPast = (partnerId) => {
-    const hoje = todayISO();
-    setSelectedBookingIds(
-      new Set(pendingBookingsFor(partnerId).filter((b) => b.booking_date && b.booking_date < hoje).map((b) => b.id))
-    );
+    setSelectedBookingIds(new Set(pendingBookingsFor(partnerId).filter(jaAconteceu).map((b) => b.id)));
   };
 
   const clearSelection = () => setSelectedBookingIds(new Set());
@@ -466,7 +473,6 @@ function SettleCommissionModal({
   settledSummary,
   onFinish,
 }) {
-  const hoje = todayISO();
   const selectedTotal = pendingBookings
     .filter((b) => selectedBookingIds.has(b.id))
     .reduce((sum, b) => sum + Number(b.comissao_valor || 0), 0);
@@ -563,7 +569,7 @@ function SettleCommissionModal({
             <p className="text-muted text-[12px] text-center py-4">Nenhuma comissão pendente.</p>
           )}
           {pendingBookings.map((b) => {
-            const jaAconteceu = b.booking_date && b.booking_date < hoje;
+            const jaConcluido = jaAconteceu(b);
             const checked = selectedBookingIds.has(b.id);
             return (
               <label
@@ -583,10 +589,10 @@ function SettleCommissionModal({
                     <span className="text-[12px] text-cream font-medium">{b.tour_name}</span>
                     <span
                       className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
-                        jaAconteceu ? "bg-moss text-white" : "bg-hline text-muted"
+                        jaConcluido ? "bg-moss text-white" : "bg-hline text-muted"
                       }`}
                     >
-                      {jaAconteceu ? "JÁ REALIZADO" : "AINDA NÃO ACONTECEU"}
+                      {jaConcluido ? "JÁ REALIZADO" : "AINDA NÃO ACONTECEU"}
                     </span>
                   </div>
                   <div className="text-[10px] text-muted mt-0.5">
