@@ -23,7 +23,8 @@ function buildMessage(tour, dateLabel, bookingsForTurno) {
 
   bookingsForTurno.forEach((b, i) => {
     const termoOk = !!b.aceite_em;
-    lines.push(`${i + 1}. ${b.booking_code || "s/código"} · ${b.customer_name}`);
+    const pessoas = b.participants || 1;
+    lines.push(`${i + 1}. ${b.booking_code || "s/código"} · ${b.customer_name} · ${pessoas} pessoa(s)`);
     lines.push(
       `   ${termoOk ? "✅" : "⚠️"} Termo ${termoOk ? "aceito" : "NÃO aceito"} · ${
         b.status === "cancelado" ? "❌ Cancelada" : "Status: " + b.status
@@ -32,8 +33,9 @@ function buildMessage(tour, dateLabel, bookingsForTurno) {
     lines.push(`   ${paymentLine(b)}`);
   });
 
+  const totalPessoas = bookingsForTurno.reduce((sum, b) => sum + (b.participants || 1), 0);
   lines.push("");
-  lines.push(`Total: ${bookingsForTurno.length} reserva(s)`);
+  lines.push(`Total: ${bookingsForTurno.length} reserva(s) · ${totalPessoas} pessoa(s)`);
   return lines.join("\n");
 }
 
