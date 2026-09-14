@@ -311,6 +311,9 @@ export default function AdminDashboard() {
                     {b.comissao_paga ? "(paga)" : "(pendente)"}
                   </div>
                 )}
+                {!b.partner_id && (b.status === "confirmado" || b.status === "concluido") && (
+                  <AssignPartnerControl bookingId={b.id} partners={partners} getToken={getToken} onAssigned={loadBookings} />
+                )}
 
                 <div className="rounded-lg px-3 py-2 mt-3 bg-ink border border-hline">
                   <div className="flex items-center gap-1.5 mb-1.5">
@@ -408,6 +411,74 @@ export default function AdminDashboard() {
       {tab === "guias" && <AdminGuides />}
       {tab === "listadia" && <AdminDailyList bookings={bookings} />}
       {tab === "precos" && <AdminPrices />}
+    </div>
+  );
+}
+
+// Controle pequeno pra atribuir manualmente uma reserva sem parceiro a
+// um dos parceiros cadastrados — usado quando a venda foi por indicação
+// mas o sistema não capturou isso na hora (ex: pagamento demorado,
+// sessão do parceiro expirada nesse meio tempo).
+function AssignPartnerControl({ bookingId, partners, getToken, onAssigned }) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="text-[11px] text-muted underline mt-1.5 self-start">
+        Atribuir a um parceiro
+      </button>
+    );
+  }
+
+  const handleAssign = async () => {
+    if (!selected) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin-bookings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ id: bookingId, assignPartnerId: selected }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro ao atribuir parceiro");
+      onAssigned();
+    } catch (err) {
+      setError(err.message);
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 mt-1.5">
+      <div className="flex gap-2">
+        <select
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+          className="flex-1 rounded-lg px-2 py-1.5 bg-ink border border-hline text-white text-[11px] outline-none"
+        >
+          <option value="">Essa venda foi de qual parceiro?</option>
+          {partners.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.nome}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={handleAssign}
+          disabled={!selected || saving}
+          className="px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-orange text-ink disabled:opacity-40"
+        >
+          {saving ? "..." : "Salvar"}
+        </button>
+        <button onClick={() => setOpen(false)} className="px-2 py-1.5 rounded-lg text-[11px] bg-ink border border-hline text-muted">
+          Cancelar
+        </button>
+      </div>
+      {error && <p className="text-[10px] text-[#ef4444]">{error}</p>}
     </div>
   );
 }

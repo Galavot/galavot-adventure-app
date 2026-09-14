@@ -46,8 +46,47 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "PATCH") {
-    const { id, status, newDate, newTourId } = req.body;
+    const { id, status, newDate, newTourId, assignPartnerId } = req.body;
     if (!id) return res.status(400).json({ error: "id é obrigatório" });
+
+    // Atribui manualmente uma reserva já existente a um parceiro —
+    // usado quando a venda foi feita por indicação de um parceiro mas o
+    // sistema não capturou isso na hora (ex: o cliente demorou demais
+    // pra pagar e a sessão do parceiro não estava mais ativa quando o
+    // pagamento finalmente caiu). Só funciona se a reserva ainda NÃO tem
+    // parceiro vinculado — pra não sobrescrever uma atribuição correta
+    // por engano.
+    if (assignPartnerId) {
+      const { data: current, error: fetchError } = await supabase
+        .from("bookings")
+        .select("partner_id, total")
+        .eq("id", id)
+        .single();
+      if (fetchError || !current) return res.status(404).json({ error: "Reserva não encontrada." });
+      if (current.partner_id) {
+        return res.status(409).json({ error: "Essa reserva já tem um parceiro vinculado." });
+      }
+
+      const { data: partner, error: partnerError } = await supabase
+        .from("partners")
+        .select("comissao_percentual")
+        .eq("id", assignPartnerId)
+        .single();
+      if (partnerError || !partner) return res.status(404).json({ error: "Parceiro não encontrado." });
+
+      const percentual = partner.comissao_percentual ?? 10;
+      const comissaoValor = Math.round(Number(current.total || 0) * (percentual / 100) * 100) / 100;
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .update({ partner_id: assignPartnerId, comissao_valor: comissaoValor, comissao_paga: false })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ booking: data });
+    }
 
     // Remarcar a reserva pra outra data (e opcionalmente pra outro turno,
     // manhã/tarde) — usado quando o cliente não pode ir no dia combinado
