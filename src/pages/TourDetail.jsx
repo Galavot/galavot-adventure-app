@@ -103,6 +103,14 @@ export default function TourDetail() {
           <span className="text-[11px] text-muted">{tour.weight}</span>
         </div>
 
+        <div className="mt-3 rounded-lg px-3 py-2.5 bg-stone border border-orange">
+          <span className="text-[11px] text-cream leading-relaxed">
+            ⚠️ O passeio só sai com no mínimo <span className="text-orange font-semibold">2 reservas</span> (2
+            quadriciclos) na mesma data e horário. Se não atingir esse mínimo, você pode remarcar sem custo ou
+            receber seu dinheiro de volta.
+          </span>
+        </div>
+
         <div className="mt-5 flex items-center justify-between rounded-xl p-4 bg-stone">
           <div>
             <div className="font-display text-white text-[15px]">PARTICIPANTES</div>

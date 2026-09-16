@@ -33,6 +33,10 @@ const FAQ_ITEMS = [
     a: "Sim, é só chamar no WhatsApp com antecedência que a gente remarca sem custo adicional.",
   },
   {
+    q: "E se não tiver gente suficiente no meu horário?",
+    a: "O passeio precisa de pelo menos 2 reservas (2 quadriciclos) confirmadas na mesma data e horário pra acontecer. Se isso não acontecer, avisamos com antecedência e você escolhe: remarcar sem custo ou receber o reembolso.",
+  },
+  {
     q: "Quais são as regras de segurança durante o passeio?",
     a: "Seguir sempre as orientações do guia, manter distância segura do quadriciclo da frente, respeitar os limites de velocidade do percurso, não fazer manobras perigosas ou arriscadas, não ultrapassar sem autorização do guia e não consumir álcool ou drogas antes ou durante a atividade.",
   },

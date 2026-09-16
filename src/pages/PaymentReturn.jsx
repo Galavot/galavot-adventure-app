@@ -185,6 +185,11 @@ export default function PaymentReturn() {
           </div>
         </div>
 
+        <p className="text-[10px] text-muted text-center mt-3 px-4 leading-relaxed">
+          Lembrando: o passeio precisa de no mínimo 2 reservas confirmadas na mesma data/horário pra
+          acontecer. Se isso não se confirmar, avisamos com antecedência pra remarcar ou reembolsar.
+        </p>
+
         <a
           href={CONTACT.meetingPoint.mapsUrl}
           target="_blank"
