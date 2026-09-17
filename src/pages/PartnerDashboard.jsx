@@ -155,7 +155,10 @@ export default function PartnerDashboard() {
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-display text-white text-base">{b.tour_name}</div>
-                  <div className="text-[11px] text-muted mt-0.5">{b.customer_name}</div>
+                                   <div className="text-[11px] text-muted mt-0.5">
+                    {b.booking_code ? `${b.booking_code} · ` : ""}
+                    {b.customer_name}
+                  </div>
                 </div>
                 <Pill>{b.status}</Pill>
               </div>
