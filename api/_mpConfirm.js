@@ -99,7 +99,7 @@ export async function sendConfirmationEmail(booking) {
         <strong>Data:</strong> ${dateLabel}<br/>
         <strong>Horário:</strong> ${booking.booking_time}<br/>
         <strong>Pessoas:</strong> ${booking.participants}</p>
-        <p>Qualquer dúvida, chama a gente no WhatsApp: (27) 99992-7056</p>
+        <p>Qualquer dúvida, chama a gente no WhatsApp: (14) 99123-2345</p>
         <p style="color: #888; font-size: 12px; margin-top: 24px;">Galavot Adventure — Guarapari, ES</p>
       </div>
     `
